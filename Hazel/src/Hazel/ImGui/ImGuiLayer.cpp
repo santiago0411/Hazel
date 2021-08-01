@@ -2,7 +2,7 @@
 #include "ImGuiLayer.h"
 
 #include "Hazel/Application.h"
-#include "Hazel/Platform/OpenGL/ImGuiOpenGLRenderer.h"
+#include "Platform/OpenGL/ImGuiOpenGLRenderer.h"
 
 // TEMP
 #include <GLFW/glfw3.h>
