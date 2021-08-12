@@ -5,13 +5,13 @@
 #include "Hazel/Events/KeyEvent.h"
 #include "Hazel/Events/MouseEvent.h"
 
-#include <glad/glad.h>
+#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Hazel
 {
 	static bool s_GLFWInitialized = false;
 
-	static void GLFWErrorCallback(int error, const char* description)
+	static void GLFWErrorCallback(int32_t error, const char* description)
 	{
 		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
@@ -39,24 +39,26 @@ namespace Hazel
 
 		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
+
 		if (!s_GLFWInitialized)
 		{
 			// TODO: glfwTerminate on system shutdown
-			int success = glfwInit();
-			HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
+			int32_t success = glfwInit();
+			HZ_CORE_ASSERT(success, "Could not initialize GLFW!")
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
 		}
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		HZ_CORE_ASSERT(status, "Failed to initialize glad!");
+		m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
 		// Set GLFW callbacks
-		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int32_t width, int32_t height)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.Width = width;
@@ -73,7 +75,7 @@ namespace Hazel
 			data.EventCallback(event);
 		});
 
-		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scanCode, int action, int modes)
+		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int32_t key, int32_t scanCode, int32_t action, int32_t modes)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -100,14 +102,14 @@ namespace Hazel
 			}
 		});
 
-		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
+		glfwSetCharCallback(m_Window, [](GLFWwindow* window, uint32_t keycode)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			KeyTypedEvent event(keycode);
 			data.EventCallback(event);
 		});
 		
-		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int modes)
+		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int32_t button, int32_t action, int32_t modes)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -153,7 +155,7 @@ namespace Hazel
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
