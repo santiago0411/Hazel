@@ -9,10 +9,6 @@
 
 #include "ImGui/ImGuiLayer.h"
 
-#include "Hazel/Renderer/Shader.h"
-#include "Hazel/Renderer/Buffer.h"
-#include "Hazel/Renderer/VertexArray.h"
-
 namespace Hazel
 {
 	class HAZEL_API Application
@@ -38,9 +34,6 @@ namespace Hazel
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
-
-		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_VertexArray;
 	private:
 		static Application* s_Instance;
 	};
