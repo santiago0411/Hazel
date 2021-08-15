@@ -1,6 +1,8 @@
 #include "hzpch.h"
 #include "Application.h"
 
+#include <GLFW/glfw3.h>
+
 namespace Hazel
 {
 	Application* Application::s_Instance = nullptr;
@@ -24,9 +26,13 @@ namespace Hazel
 	void Application::Run()
 	{
 		while (m_Running)
-		{	
+		{
+			const float time = (float)glfwGetTime();
+			const Timestep timestep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
+			
 			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate();
+				layer->OnUpdate(timestep);
 
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
