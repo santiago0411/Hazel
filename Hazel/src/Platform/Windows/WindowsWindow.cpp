@@ -9,9 +9,9 @@
 
 namespace Hazel
 {
-	static bool s_GLFWInitialized = false;
+	static bool s_glfwInitialized = false;
 
-	static void GLFWErrorCallback(int32_t error, const char* description)
+	static void glfwErrorCallback(int32_t error, const char* description)
 	{
 		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
@@ -39,14 +39,13 @@ namespace Hazel
 
 		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
-
-		if (!s_GLFWInitialized)
+		if (!s_glfwInitialized)
 		{
 			// TODO: glfwTerminate on system shutdown
 			int32_t success = glfwInit();
 			HZ_CORE_ASSERT(success, "Could not initialize GLFW!")
-			glfwSetErrorCallback(GLFWErrorCallback);
-			s_GLFWInitialized = true;
+			glfwSetErrorCallback(glfwErrorCallback);
+			s_glfwInitialized = true;
 		}
 
 		m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);

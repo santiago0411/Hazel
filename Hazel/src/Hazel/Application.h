@@ -7,8 +7,6 @@
 #include "Hazel/Events/ApplicationEvent.h"
 #include "Hazel/Events/Event.h"
 
-#include "Hazel/Core/Timestep.h"
-
 #include "ImGui/ImGuiLayer.h"
 
 namespace Hazel
@@ -17,7 +15,7 @@ namespace Hazel
 	{
 	public:
 		Application();
-		virtual ~Application();
+		virtual ~Application() = default;
 
 		void Run();
 
