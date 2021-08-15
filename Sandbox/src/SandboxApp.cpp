@@ -236,7 +236,7 @@ public:
 		ImGui::Begin("Settings");
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
-		ImGui::DragFloat("Camera Speed", &m_CameraMoveSpeed, 0.05f, 0.0f, 10.0f);
+		ImGui::SliderFloat("Camera Speed", &m_CameraMoveSpeed, 0.0f, 10.0f);
 		ImGui::End();
 	}
 
