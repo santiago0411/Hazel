@@ -134,19 +134,19 @@ public:
 
 	void OnUpdate(Hazel::Timestep ts) override
 	{
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_LEFT))
+		if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
 			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-		else if (Hazel::Input::IsKeyPressed(HZ_KEY_RIGHT))
+		else if (Hazel::Input::IsKeyPressed(HZ_KEY_D))
 			m_CameraPosition.x += m_CameraMoveSpeed * ts;
 
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_UP))
+		if (Hazel::Input::IsKeyPressed(HZ_KEY_W))
 			m_CameraPosition.y += m_CameraMoveSpeed * ts;
-		else if (Hazel::Input::IsKeyPressed(HZ_KEY_DOWN))
+		else if (Hazel::Input::IsKeyPressed(HZ_KEY_S))
 			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
 
-		if (Hazel::Input::IsKeyPressed(HZ_KEY_A))
+		if (Hazel::Input::IsKeyPressed(HZ_KEY_LEFT))
 			m_CameraRotation += m_CameraRotationSpeed * ts;
-		else if (Hazel::Input::IsKeyPressed(HZ_KEY_D))
+		else if (Hazel::Input::IsKeyPressed(HZ_KEY_RIGHT))
 			m_CameraRotation -= m_CameraRotationSpeed * ts;
 		
 		if (Hazel::Input::IsKeyPressed(HZ_KEY_R))
@@ -172,7 +172,7 @@ public:
 		{
 			for (int x = 0; x < 20; x++)
 			{
-				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
+				glm::vec3 pos(0.11f * x, 0.11f * y, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
 				Hazel::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
 			}
@@ -186,7 +186,9 @@ public:
 	void OnImGuiRender() override
 	{
 		ImGui::Begin("Settings");
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
+		ImGui::DragFloat("Camera Speed", &m_CameraMoveSpeed, 0.05f, 0.0f, 10.0f);
 		ImGui::End();
 	}
 
