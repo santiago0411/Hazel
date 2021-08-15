@@ -13,7 +13,7 @@ namespace Hazel
         void Bind() const override;
         void Unbind() const override;
 
-        void SetLayout(const BufferLayout& layout) { m_Layout = layout; }
+        void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
         const BufferLayout& GetLayout() override { return m_Layout; }
 
     private:
