@@ -9,6 +9,8 @@ namespace Hazel
     class Renderer
     {
     public:
+        static void Init();
+    	
         static void BeginScene(OrthographicCamera& camera);
     	static void EndScene();
 
@@ -22,6 +24,6 @@ namespace Hazel
             glm::mat4 ViewProjectionMatrix;
     	};
 
-        static SceneData* s_SceneData;
+        static Scope<SceneData> s_SceneData;
     };
 }
