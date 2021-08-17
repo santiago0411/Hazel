@@ -18,7 +18,7 @@ namespace Hazel
 	
 	Scope<Window> Window::Create(const WindowProps& props)
 	{
-		return std::make_unique<WindowsWindow>(props);
+		return CreateScope<WindowsWindow>(props);
 	}
 	
 	WindowsWindow::WindowsWindow(const WindowProps& props)
@@ -50,7 +50,7 @@ namespace Hazel
 
 		m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
-		m_Context = new OpenGLContext(m_Window);
+		m_Context = CreateScope<OpenGLContext>(m_Window);
 		m_Context->Init();
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
