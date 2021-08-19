@@ -1,5 +1,5 @@
 #include "hzpch.h"
-#include "WindowsWindow.h"
+#include "Platform/Windows/WindowsWindow.h"
 
 #include "Hazel/Events/ApplicationEvent.h"
 #include "Hazel/Events/KeyEvent.h"
@@ -41,7 +41,6 @@ namespace Hazel
 
 		if (s_GLFWWindowCount == 0)
 		{
-			// TODO: glfwTerminate on system shutdown
 			int32_t success = glfwInit();
 			HZ_CORE_ASSERT(success, "Could not initialize GLFW!")
 			glfwSetErrorCallback(glfwErrorCallback);
@@ -50,7 +49,7 @@ namespace Hazel
 		m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		++s_GLFWWindowCount;
 		
-		m_Context = CreateScope<OpenGLContext>(m_Window);
+		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);

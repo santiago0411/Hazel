@@ -1,9 +1,9 @@
 #include "hzpch.h"
-#include "Renderer2D.h"
+#include "Hazel/Renderer/Renderer2D.h"
 
-#include "RenderCommand.h"
-#include "Shader.h"
-#include "VertexArray.h"
+#include "Hazel/Renderer/RenderCommand.h"
+#include "Hazel/Renderer/Shader.h"
+#include "Hazel/Renderer/VertexArray.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -41,8 +41,7 @@ namespace Hazel
 		s_Data->QuadVertexArray->AddVertexBuffer(squareVB);
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		Ref<IndexBuffer> squareIB;
-		squareIB = IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+		Ref<IndexBuffer> squareIB = IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 		s_Data->QuadVertexArray->SetIndexBuffer(squareIB);
 
 		s_Data->WhiteTexture = Texture2D::Create(1, 1);

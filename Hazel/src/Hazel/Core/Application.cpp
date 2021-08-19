@@ -1,5 +1,5 @@
 #include "hzpch.h"
-#include "Application.h"
+#include "Hazel/Core/Application.h"
 
 #include "Hazel/Renderer/Renderer.h"
 
@@ -22,6 +22,11 @@ namespace Hazel
 		
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+	}
+
+	Application::~Application()
+	{
+		Renderer::Shutdown();
 	}
 
 	void Application::Run()

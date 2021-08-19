@@ -1,7 +1,7 @@
 #include "hzpch.h"
-#include "Renderer.h"
+#include "Hazel/Renderer/Renderer.h"
 
-#include "Renderer2D.h"
+#include "Hazel/Renderer/Renderer2D.h"
 
 namespace Hazel
 {
@@ -11,6 +11,11 @@ namespace Hazel
     {
         RenderCommand::Init();
         Renderer2D::Init();
+    }
+
+    void Renderer::Shutdown()
+    {
+        Renderer2D::Shutdown();
     }
 
     void Renderer::OnWindowResize(uint32_t width, uint32_t height)
