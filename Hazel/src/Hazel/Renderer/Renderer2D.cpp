@@ -135,6 +135,9 @@ namespace Hazel
 
 	void Renderer2D::Flush()
 	{
+		if (g_Data.QuadIndexCount == 0)
+			return; // Nothing to draw
+		
 		for (uint32_t i = 0; i < g_Data.TextureSlotIndex; i++)
 			g_Data.TextureSlots[i]->Bind(i);
 		
