@@ -107,6 +107,7 @@ namespace Hazel
 	{
 		HZ_PROFILE_FUNCTION();
 
+		delete[] g_Data.QuadVertexBufferBase;
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
@@ -187,19 +188,18 @@ namespace Hazel
 		g_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4 tintColor)
 	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor);
+		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4 tintColor)
 	{
 		HZ_PROFILE_FUNCTION();
 
 		if (g_Data.QuadIndexCount >= Renderer2DData::MAX_INDICES)
 			FlushAndReset();
 		
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		float textureIndex = 0.0f;
 		
 		for (uint32_t i = 1; i < g_Data.TextureSlotIndex; i++)
@@ -230,7 +230,7 @@ namespace Hazel
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
 			g_Data.QuadVertexBufferPtr->Position = transform * g_Data.QuadVertexPositions[i];
-			g_Data.QuadVertexBufferPtr->Color = color;
+			g_Data.QuadVertexBufferPtr->Color = tintColor;
 			g_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			g_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			g_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
@@ -291,7 +291,6 @@ namespace Hazel
 		if (g_Data.QuadIndexCount >= Renderer2DData::MAX_INDICES)
 			FlushAndReset();
 		
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		float textureIndex = 0.0f;
 
 		for (uint32_t i = 1; i < g_Data.TextureSlotIndex; i++)
@@ -323,7 +322,7 @@ namespace Hazel
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
 			g_Data.QuadVertexBufferPtr->Position = transform * g_Data.QuadVertexPositions[i];
-			g_Data.QuadVertexBufferPtr->Color = color;
+			g_Data.QuadVertexBufferPtr->Color = tintColor;
 			g_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			g_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			g_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
