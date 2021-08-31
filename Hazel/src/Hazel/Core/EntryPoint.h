@@ -2,7 +2,7 @@
 
 #ifdef HZ_PLATFORM_WINDOWS
 
-extern auto Hazel::CreateApplication() -> Application*;
+extern Hazel::Application* Hazel::CreateApplication();
 
 int main(int argc, char** argv)
 {
