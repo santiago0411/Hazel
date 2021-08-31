@@ -19,6 +19,7 @@ void Sandbox2D::OnAttach()
 
 	m_TextureStairs = Hazel::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7, 6 }, { 128, 128 });
 	m_TextureBarrel = Hazel::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8, 2 }, { 128, 128 });
+	m_TextureGrass = Hazel::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 1, 11 }, { 128, 128 });
 	m_TextureTree = Hazel::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2, 1 }, { 128, 128 }, { 1, 2 });
 }
 
@@ -39,53 +40,38 @@ void Sandbox2D::OnUpdate(Hazel::Timestep ts)
 		Hazel::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Hazel::RenderCommand::Clear();
 	}
-#if 0
-	{
-		static float rotation = 0.0f;
-		rotation += ts * 20.0f;
-		
-		HZ_PROFILE_SCOPE("Renderer Draw");
-		Hazel::Renderer2D::BeginScene(m_CameraController.GetCamera());
-		Hazel::Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, glm::radians(-45.0f), { 0.8f, 0.2f, 0.3f, 1.0f });
-		Hazel::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f },  { 0.8f, 0.2f, 0.3f, 1.0f });
-		Hazel::Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-		Hazel::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 20.0f, 20.0f }, m_CheckerBoardTexture, 10.0f);
-		Hazel::Renderer2D::DrawRotatedQuad({ -0.5f, -0.5f }, { 1.0f, 1.0f }, glm::radians(rotation), m_CheckerBoardTexture, 20.0f, { 0.8f, 0.8f, 1.0f, 1.0f });
-		Hazel::Renderer2D::EndScene();
-		
-		Hazel::Renderer2D::BeginScene(m_CameraController.GetCamera());
-		for (float y = -5.0f; y < 5.0f; y += 0.5f)
-		{
-			for (float x = -5.0f; x < 5.0f; x += 0.5f)
-			{
-				glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 0.7f };
-				Hazel::Renderer2D::DrawQuad({ x, y }, { 0.45f, 0.45f }, color);
-			}
-			
-		}
-		Hazel::Renderer2D::EndScene();
-	}
-#endif
+
 	Hazel::Renderer2D::BeginScene(m_CameraController.GetCamera());
-	Hazel::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, m_TextureStairs);
-	Hazel::Renderer2D::DrawQuad({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, m_TextureBarrel);
-	Hazel::Renderer2D::DrawQuad({ 2.0f, 0.0f, 0.0f }, { 1.0f, 2.0f }, m_TextureTree);
+
+	for (int32_t y = 0; y < 20; y++)
+	{
+		for (int32_t x = 0; x < 20; x++)
+		{
+			Hazel::Renderer2D::DrawQuad({ x - 10, y - 10, -0.1f }, { 1.0f, 1.0f }, m_TextureGrass);
+		}
+	}
+	
+	//Hazel::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, m_TextureStairs);
+	Hazel::Renderer2D::DrawQuad({ 1.0f, 0.0f, 0.1f }, { 1.0f, 1.0f }, m_TextureBarrel);
+	Hazel::Renderer2D::DrawQuad({ 2.0f, 3.5f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
+	Hazel::Renderer2D::DrawQuad({ 5.0f, 1.0f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
+	Hazel::Renderer2D::DrawQuad({ -9.5f, -5.0f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
+	Hazel::Renderer2D::DrawQuad({ -8.0f, 3.0f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
+	Hazel::Renderer2D::DrawQuad({ -3.3f, 6.0f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
+	Hazel::Renderer2D::DrawQuad({ 2.7f, 7.0f, 0.1f }, { 1.0f, 2.0f }, m_TextureTree);
 	Hazel::Renderer2D::EndScene();
 }
 
 void Sandbox2D::OnImGuiRender()
 {
 	HZ_PROFILE_FUNCTION();
-	
-	ImGui::Begin("Settings");
-	auto stats = Hazel::Renderer2D::GetStats();
-	ImGui::Text("Renderer2D Stats:");
+
+	ImGui::Begin("Renderer2D Stats");
+	const auto stats = Hazel::Renderer2D::GetStats();
 	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 	ImGui::Text("Quads: %d", stats.QuadCount);
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-	
-	ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 	ImGui::End();
 }
 

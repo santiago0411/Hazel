@@ -203,19 +203,20 @@ private:
 	glm::vec3 m_SquareColor{ 0.2, 0.3f, 0.8f };
 };
 
-class Sandbox : public Hazel::Application
+class HazelEditor : public Hazel::Application
 {
 public:
-	Sandbox()
+	HazelEditor()
+		: Application("Sandbox")
 	{
 		//PushLayer(new ExampleLayer());
 		PushLayer(new Sandbox2D());
 	}
 
-	~Sandbox() override = default;
+	~HazelEditor() override = default;
 };
 
 Hazel::Application* Hazel::CreateApplication()
 {
-	return new Sandbox();
+	return new HazelEditor();
 }

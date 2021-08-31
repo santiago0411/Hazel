@@ -23,7 +23,7 @@ private:
 	Hazel::Ref<Hazel::Texture2D> m_CheckerBoardTexture;
 	
 	Hazel::Ref<Hazel::Texture2D> m_SpriteSheet;
-	Hazel::Ref<Hazel::SubTexture2D> m_TextureStairs, m_TextureBarrel, m_TextureTree;
+	Hazel::Ref<Hazel::SubTexture2D> m_TextureStairs, m_TextureBarrel, m_TextureTree, m_TextureGrass;
 
 	glm::vec4 m_SquareColor{ 0.2, 0.3f, 0.8f, 1.0f };
 };
