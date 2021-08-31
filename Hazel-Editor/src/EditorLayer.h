@@ -25,9 +25,6 @@ namespace Hazel
 		Ref<Texture2D> m_CheckerBoardTexture;
 		Ref<Framebuffer> m_Framebuffer;
 
-		Ref<Texture2D> m_SpriteSheet;
-		Ref<SubTexture2D> m_TextureStairs, m_TextureBarrel, m_TextureTree, m_TextureGrass;
-
-		glm::vec4 m_SquareColor{ 0.2, 0.3f, 0.8f, 1.0f };
+		glm::vec2 m_ViewportSize = glm::vec2(0.0f);
 	};
 }
