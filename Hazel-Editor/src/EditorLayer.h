@@ -25,6 +25,7 @@ namespace Hazel
 		Ref<Texture2D> m_CheckerBoardTexture;
 		Ref<Framebuffer> m_Framebuffer;
 
+		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = glm::vec2(0.0f);
 	};
 }
