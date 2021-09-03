@@ -27,6 +27,9 @@ namespace Hazel
 
 		m_SquareEntity = m_ActiveScene->CreateEntity("Square");
 		m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+		m_CameraEntity.AddComponent<CameraComponent>();
 	}
 
 	void EditorLayer::OnDetach()
@@ -38,6 +41,18 @@ namespace Hazel
 	{
 		HZ_PROFILE_FUNCTION();
 
+		// Resize
+		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f) // Zero sized framebuffer is invalid
+		{
+			if (const auto spec = m_Framebuffer->GetSpecification(); 
+				(float)spec.Width != m_ViewportSize.x || (float)spec.Height != m_ViewportSize.y) // Viewport size differs from last frame
+			{
+				m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+				m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+				m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			}
+		}
+
 		if (m_ViewportFocused)
 			m_CameraController.OnUpdate(ts);
 
@@ -46,12 +61,7 @@ namespace Hazel
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-
-		Renderer2D::BeginScene(m_CameraController.GetCamera());
-
 		m_ActiveScene->OnUpdate(ts);
-
-		Renderer2D::EndScene();
 
 		m_Framebuffer->Unbind();
 	}
@@ -150,15 +160,10 @@ namespace Hazel
 		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 		
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize) && viewportPanelSize.x > 0 && viewportPanelSize.y > 0)
-		{
-			m_Framebuffer->Resize((uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y);
-			m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-			m_CameraController.OnResize(viewportPanelSize.x, viewportPanelSize.y);
-		}
 		uint32_t textureId = m_Framebuffer->GetColorAttachmentRendererId();
-		ImGui::Image((void*)(size_t)textureId, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image(reinterpret_cast<void*>(textureId), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
 		

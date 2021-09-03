@@ -110,6 +110,21 @@ namespace Hazel
 		delete[] g_Data.QuadVertexBufferBase;
 	}
 
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		const glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+
+		g_Data.TextureShader->Bind();
+		g_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		g_Data.QuadIndexCount = 0;
+		g_Data.QuadVertexBufferPtr = g_Data.QuadVertexBufferBase;
+
+		g_Data.TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		HZ_PROFILE_FUNCTION();
