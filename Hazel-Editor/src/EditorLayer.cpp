@@ -163,7 +163,7 @@ namespace Hazel
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint32_t textureId = m_Framebuffer->GetColorAttachmentRendererId();
-		ImGui::Image(reinterpret_cast<void*>(textureId), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((void*)(size_t)textureId, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
 		
