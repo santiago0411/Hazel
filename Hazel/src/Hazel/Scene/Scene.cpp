@@ -19,6 +19,21 @@ namespace Hazel
 
 	void Scene::OnUpdate(Timestep ts)
 	{
+		// Update scripts
+		{
+			m_Registry.view<NativeScriptComponent>().each([=, this](auto entity, NativeScriptComponent& nsc)
+			{
+				if (!nsc.Instance)
+				{
+					nsc.Instance = nsc.InstantiateScript();
+					nsc.Instance->m_Entity = Entity{ entity, this };
+					nsc.Instance->OnCreate();
+				}
+
+				nsc.Instance->OnUpdate(ts);
+			});
+		}
+
 		// Render 2D
 		Camera* mainCamera = nullptr;
 		glm::mat4* cameraTransform = nullptr;
@@ -26,7 +41,7 @@ namespace Hazel
 			const auto view = m_Registry.view<CameraComponent, TransformComponent>();
 			for (const auto entity : view)
 			{
-				const auto& [camera, transform] = view.get(entity);
+				const auto [camera, transform] = view.get(entity);
 
 				if (camera.Primary)
 				{
@@ -44,7 +59,7 @@ namespace Hazel
 			const auto group = m_Registry.group<TransformComponent, SpriteRendererComponent>();
 			for (const auto entity : group)
 			{
-				const auto& [transform, sprite] = group.get(entity);
+				const auto [transform, sprite] = group.get(entity);
 				Renderer2D::DrawQuad(transform, sprite.Color);
 			}
 
