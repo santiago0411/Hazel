@@ -1,4 +1,5 @@
 #pragma once
+#include "Hazel/Core/Base.h"
 
 #ifdef HZ_PLATFORM_WINDOWS
 

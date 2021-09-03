@@ -4,6 +4,10 @@
 #include <fstream>
 #include <iomanip>
 #include <thread>
+#include <mutex>
+#include <sstream>
+
+#include "Hazel/Core/Log.h"
 
 namespace Hazel
 {

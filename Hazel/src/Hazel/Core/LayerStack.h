@@ -3,6 +3,8 @@
 #include "Hazel/Core/Base.h"
 #include "Hazel/Core/Layer.h"
 
+#include <vector>
+
 namespace Hazel
 {
 	class HAZEL_API LayerStack
