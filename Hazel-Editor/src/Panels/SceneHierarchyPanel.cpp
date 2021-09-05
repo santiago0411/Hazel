@@ -58,7 +58,7 @@ namespace Hazel
 		}
 	}
 
-	void SceneHierarchyPanel::DrawComponents(Entity entity)
+	void SceneHierarchyPanel::DrawComponents(Entity entity) const
 	{
 		if (entity.HasComponent<TagComponent>())
 		{
@@ -68,9 +68,7 @@ namespace Hazel
 			strcpy_s(buffer, sizeof(buffer), tag.c_str());
 
 			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
-			{
 				tag = std::string(buffer);
-			}
 		}
 
 		if (entity.HasComponent<TransformComponent>())
@@ -144,6 +142,16 @@ namespace Hazel
 					ImGui::Checkbox("Fixed Aspect Ratio", &cameraComponent.FixedAspectRatio);
 				}
 
+				ImGui::TreePop();
+			}
+		}
+
+		if (entity.HasComponent<SpriteRendererComponent>())
+		{
+			if (ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
+			{
+				auto& src = entity.GetComponent<SpriteRendererComponent>();
+				ImGui::ColorEdit4("Color", glm::value_ptr(src.Color));
 				ImGui::TreePop();
 			}
 		}

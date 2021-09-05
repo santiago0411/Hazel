@@ -18,7 +18,7 @@ namespace Hazel
 
 	private:
 		void DrawEntityNode(Entity entity);
-		void DrawComponents(Entity entity);
+		void DrawComponents(Entity entity) const;
 
 	private:
 		Ref<Scene> m_Context;
