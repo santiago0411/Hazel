@@ -57,6 +57,7 @@ namespace Hazel
 		static float FindTextureIndex(const Ref<Texture2D>& texture);
 		static void LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, float textureIndex, float tilingFactor);
 
-		static void FlushAndReset();
+		static void StartBatch();
+		static void NextBatch();
 	};
 }
