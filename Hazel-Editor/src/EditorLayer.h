@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Hazel.h>
-#include "Hazel/Debug/Instrumentor.h"
+
+#include "Panels/SceneHierarchyPanel.h"
 
 namespace Hazel
 {
@@ -30,5 +31,8 @@ namespace Hazel
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = glm::vec2(0.0f);
+
+		// Panels
+		SceneHierarchyPanel m_SceneHierarchyPanel;
 	};
 }
