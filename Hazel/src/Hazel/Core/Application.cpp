@@ -5,6 +5,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <ranges>
+
 namespace Hazel
 {
 	Application* Application::s_Instance = nullptr;
@@ -16,7 +18,7 @@ namespace Hazel
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		
-		m_Window = Window::Create({name});
+		m_Window = Window::Create(WindowProps{name, 1600, 900});
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
 		m_Window->SetVSync(false);
 
@@ -97,11 +99,11 @@ namespace Hazel
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
 
-		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+		for (const auto& layer : std::ranges::reverse_view(m_LayerStack))
 		{
 			if (e.Handled)
 				break;
-			(*it)->OnEvent(e);
+			layer->OnEvent(e);
 		}
 	}
 
