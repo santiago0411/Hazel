@@ -2,8 +2,9 @@
 
 #include <imgui/imgui.h>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Hazel/Scene/SceneSerializer.h"
 
 namespace Hazel
 {
@@ -11,6 +12,32 @@ namespace Hazel
 		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f, true)
 	{
 	}
+
+	class CameraController : public ScriptableEntity
+	{
+		void OnCreate() override
+		{
+			m_Transform = &GetComponent<TransformComponent>();
+		}
+
+		void OnUpdate(Timestep ts) override
+		{
+			auto& position = m_Transform->Position;
+			constexpr float speed = 5.0f;
+
+			if (Input::IsKeyPressed(Key::A))
+				position.x -= speed * ts;
+			if (Input::IsKeyPressed(Key::D))
+				position.x += speed * ts;
+			if (Input::IsKeyPressed(Key::W))
+				position.y += speed * ts;
+			if (Input::IsKeyPressed(Key::S))
+				position.y -= speed * ts;
+		}
+
+	private:
+		TransformComponent* m_Transform = nullptr;
+	};
 
 	void EditorLayer::OnAttach()
 	{
@@ -30,29 +57,12 @@ namespace Hazel
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<CameraComponent>();
-
-		class CameraController : public ScriptableEntity
-		{
-		public:
-			void OnUpdate(Timestep ts) override
-			{
-				auto& position = GetComponent<TransformComponent>().Position;
-				constexpr float speed = 5.0f;
-
-				if (Input::IsKeyPressed(Key::A))
-					position.x -= speed * ts;
-				if (Input::IsKeyPressed(Key::D))
-					position.x += speed * ts;
-				if (Input::IsKeyPressed(Key::W))
-					position.y += speed * ts;
-				if (Input::IsKeyPressed(Key::S))
-					position.y -= speed * ts;
-			}
-		};
-
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Serialize("assets/scenes/Example.hazel");
 	}
 
 	void EditorLayer::OnDetach()
