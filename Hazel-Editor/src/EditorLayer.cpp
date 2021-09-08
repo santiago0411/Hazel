@@ -248,7 +248,7 @@ namespace Hazel
 			}
 		}
 
-		return true;
+		return false;
 	}
 
 	void EditorLayer::NewScene()
@@ -260,26 +260,26 @@ namespace Hazel
 
 	void EditorLayer::OpenScene()
 	{
-		const std::string filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
-		if (!filepath.empty())
+		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
+		if (filepath)
 		{
 			m_ActiveScene = CreateRef<Scene>();
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 			SceneSerializer serializer(m_ActiveScene);
-			if (!serializer.Deserialize(filepath))
+			if (!serializer.Deserialize(*filepath))
 				HZ_ERROR("Error loading scene '{0}'", filepath);
 		}
 	}
 
 	void EditorLayer::SaveSceneAs()
 	{
-		const std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
-		if (!filepath.empty())
+		const std::optional<std::string> filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
+		if (filepath)
 		{
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(filepath);
+			serializer.Serialize(*filepath);
 		}
 	}
 }
