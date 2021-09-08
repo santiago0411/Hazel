@@ -14,8 +14,9 @@ namespace Hazel
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag)
-			: Tag(tag) {}
+		TagComponent(const char* tag) : Tag(tag) {}
+		TagComponent(const std::string& tag) : Tag(tag) {}
+		TagComponent(std::string&& tag) : Tag(std::move(tag)) {}
 	};
 
 	struct TransformComponent

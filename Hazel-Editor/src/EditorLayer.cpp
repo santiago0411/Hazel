@@ -269,7 +269,7 @@ namespace Hazel
 
 			SceneSerializer serializer(m_ActiveScene);
 			if (!serializer.Deserialize(*filepath))
-				HZ_ERROR("Error loading scene '{0}'", filepath);
+				HZ_ERROR("Error loading scene '{0}'", *filepath);
 		}
 	}
 
