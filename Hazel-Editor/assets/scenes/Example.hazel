@@ -26,4 +26,4 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0, 0.899999976, 0, 1]
+      Color: [0, 1, 0, 1]
