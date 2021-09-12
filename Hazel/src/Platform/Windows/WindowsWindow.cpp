@@ -13,9 +13,9 @@
 
 namespace Hazel
 {
-	static uint8_t s_GLFWWindowCount = 0;
+	static uint8_t g_GLFWWindowCount = 0;
 
-	static void glfwErrorCallback(int32_t error, const char* description)
+	static void GlfwErrorCallback(int32_t error, const char* description)
 	{
 		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
@@ -23,15 +23,15 @@ namespace Hazel
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
 		HZ_PROFILE_FUNCTION();
-		
-		Init(props);
+
+		WindowsWindow::Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
 		HZ_PROFILE_FUNCTION();
-		
-		Shutdown();
+
+		WindowsWindow::Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
@@ -44,12 +44,12 @@ namespace Hazel
 
 		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
-		if (s_GLFWWindowCount == 0)
+		if (g_GLFWWindowCount == 0)
 		{
 			HZ_PROFILE_SCOPE("glfwInit");
 			int32_t success = glfwInit();
 			HZ_CORE_ASSERT(success, "Could not initialize GLFW!")
-			glfwSetErrorCallback(glfwErrorCallback);
+			glfwSetErrorCallback(GlfwErrorCallback);
 		}
 
 		{
@@ -59,7 +59,7 @@ namespace Hazel
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		#endif
 			m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-			++s_GLFWWindowCount;
+			g_GLFWWindowCount++;
 		}
 			
 		m_Context = GraphicsContext::Create(m_Window);
@@ -163,7 +163,7 @@ namespace Hazel
 		HZ_PROFILE_FUNCTION();
 		
 		glfwDestroyWindow(m_Window);
-		if (--s_GLFWWindowCount == 0)
+		if (--g_GLFWWindowCount == 0)
 		{
 			HZ_CORE_INFO("Terminating GLFW");
 			glfwTerminate();
