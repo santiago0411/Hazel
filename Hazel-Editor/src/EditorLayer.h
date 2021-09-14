@@ -25,15 +25,8 @@ namespace Hazel
 		void OpenScene();
 		void SaveSceneAs();
 	private:
-		OrthographicCameraController m_CameraController;
-
-		Ref<Texture2D> m_CheckerBoardTexture;
 		Ref<Framebuffer> m_Framebuffer;
-
 		Ref<Scene> m_ActiveScene;
-		Entity m_SquareEntity;
-		Entity m_CameraEntity;
-
 		EditorCamera m_EditorCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;

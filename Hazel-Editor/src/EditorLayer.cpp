@@ -14,58 +14,22 @@
 namespace Hazel
 {
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f, true)
+		: Layer("EditorLayer")
 	{
 	}
-
-	class CameraController : public ScriptableEntity
-	{
-		void OnCreate() override
-		{
-			m_Transform = &GetComponent<TransformComponent>();
-		}
-
-		void OnUpdate(Timestep ts) override
-		{
-			auto& position = m_Transform->Position;
-			constexpr float speed = 5.0f;
-
-			if (Input::IsKeyPressed(Key::A))
-				position.x -= speed * ts;
-			if (Input::IsKeyPressed(Key::D))
-				position.x += speed * ts;
-			if (Input::IsKeyPressed(Key::W))
-				position.y += speed * ts;
-			if (Input::IsKeyPressed(Key::S))
-				position.y -= speed * ts;
-		}
-
-	private:
-		TransformComponent* m_Transform = nullptr;
-	};
 
 	void EditorLayer::OnAttach()
 	{
 		HZ_PROFILE_FUNCTION();
 
-		m_CheckerBoardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
-
 		FramebufferSpecification framebufferSpec;
+		framebufferSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
 		framebufferSpec.Width = 1280;
 		framebufferSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(framebufferSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
-
-		m_SquareEntity = m_ActiveScene->CreateEntity("Square");
-		m_SquareEntity.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
-
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
-		m_CameraEntity.AddComponent<CameraComponent>();
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
-
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
@@ -85,17 +49,12 @@ namespace Hazel
 				(float)spec.Width != m_ViewportSize.x || (float)spec.Height != m_ViewportSize.y) // Viewport size differs from last frame
 			{
 				m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-				m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 				m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 				m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			}
 		}
 
-		if (m_ViewportFocused)
-		{
-			m_CameraController.OnUpdate(ts);
-			m_EditorCamera.OnUpdate(ts);
-		}
+		m_EditorCamera.OnUpdate(ts);
 
 		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
@@ -208,7 +167,7 @@ namespace Hazel
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint64_t textureId = m_Framebuffer->GetColorAttachmentRendererId();
+		uint64_t textureId = m_Framebuffer->GetColorAttachmentRendererId(1);
 		ImGui::Image((void*)textureId, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 
@@ -276,7 +235,6 @@ namespace Hazel
 
 	void EditorLayer::OnEvent(Event& e)
 	{
-		m_CameraController.OnEvent(e);
 		m_EditorCamera.OnEvent(e);
 
 		EventDispatcher dispatcher(e);
