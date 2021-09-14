@@ -30,7 +30,7 @@ namespace Hazel
 		for (const auto entity : group)
 		{
 			const auto [transform, sprite] = group.get(entity);
-			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+			Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int32_t)entity);
 		}
 
 		Renderer2D::EndScene();
