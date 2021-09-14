@@ -126,6 +126,18 @@ namespace Hazel
 		StartBatch();
 	}
 
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		const glm::mat4 viewProj = camera.GetViewProjection();
+
+		g_Data->TextureShader->Bind();
+		g_Data->TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		StartBatch();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		HZ_PROFILE_FUNCTION();

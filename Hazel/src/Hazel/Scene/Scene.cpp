@@ -22,7 +22,21 @@ namespace Hazel
 		m_Registry.destroy(entity);
 	}
 
-	void Scene::OnUpdate(Timestep ts)
+	void Scene::OnUpdateEditor(Timestep ts, const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+
+		const auto group = m_Registry.group<TransformComponent, SpriteRendererComponent>();
+		for (const auto entity : group)
+		{
+			const auto [transform, sprite] = group.get(entity);
+			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+		}
+
+		Renderer2D::EndScene();
+	}
+
+	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		// Update scripts
 		{
