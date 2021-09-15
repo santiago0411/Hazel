@@ -1,7 +1,6 @@
 # Binaries
 **/bin/
 bin-int/
-!vendor/premake/bin
 
 # Hazel files
 *.log
@@ -16,6 +15,8 @@ HazelProfile*.json
 **.DotSettings.user
 
 # Directories
+vendor/VulkanSDK
 Hazel/vendor/VulkanSDK
-Hazelnut/assets/cache
+Hazel-Editor/assets/cache
+Sandbox/assets/cache
 scripts/__pycache__

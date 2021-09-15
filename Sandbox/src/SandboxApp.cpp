@@ -8,8 +8,8 @@
 class HazelEditor : public Hazel::Application
 {
 public:
-	HazelEditor()
-		: Application("Sandbox")
+	HazelEditor(Hazel::ApplicationCommandLineArgs args)
+		: Application("Sandbox", args)
 	{
 		PushLayer(new Sandbox2D());
 	}
@@ -17,7 +17,7 @@ public:
 	~HazelEditor() override = default;
 };
 
-Hazel::Application* Hazel::CreateApplication()
+Hazel::Application* Hazel::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new HazelEditor();
+	return new HazelEditor(args);
 }
