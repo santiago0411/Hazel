@@ -180,7 +180,16 @@ namespace Hazel
 
 	bool SceneSerializer::Deserialize(const std::string& filepath) const
 	{
-		YAML::Node data = YAML::LoadFile(filepath);
+		YAML::Node data;
+		try
+		{
+			data = YAML::LoadFile(filepath);
+		}
+		catch (YAML::ParserException e)
+		{
+			return false;
+		}
+
 		if (!data["Scene"])
 			return false;
 
