@@ -29,6 +29,11 @@ namespace Hazel
 		void SaveSceneAs();
 
 		int32_t GetMouseOverPixelData() const;
+
+		void OnScenePlay();
+		void OnSceneStop();
+
+		void UI_ToolBar();
 	private:
 		Ref<Framebuffer> m_Framebuffer;
 		Ref<Scene> m_ActiveScene;
@@ -43,5 +48,15 @@ namespace Hazel
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
+
+		// Editor resources
+		enum class SceneState
+		{
+			Edit = 0, Play = 1
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
+
+		Ref<Texture2D> m_IconPlay, m_IconStop;
 	};
 }

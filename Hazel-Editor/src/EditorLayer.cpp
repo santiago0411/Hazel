@@ -24,6 +24,9 @@ namespace Hazel
 	{
 		HZ_PROFILE_FUNCTION();
 
+		m_IconPlay = Texture2D::Create("Resources/Icons/PlayButton.png");
+		m_IconStop = Texture2D::Create("Resources/Icons/StopButton.png");
+
 		FramebufferSpecification framebufferSpec;
 		framebufferSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		framebufferSpec.Width = 1280;
@@ -65,8 +68,6 @@ namespace Hazel
 			}
 		}
 
-		m_EditorCamera.OnUpdate(ts);
-
 		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
@@ -75,7 +76,15 @@ namespace Hazel
 		// Clear entity id attachment to -1
 		m_Framebuffer->ClearAttachment(1, -1);
 
-		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		if (m_SceneState == SceneState::Edit)
+		{
+			m_EditorCamera.OnUpdate(ts);
+			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		}
+		else if (m_SceneState == SceneState::Play)
+		{
+			m_ActiveScene->OnUpdateRuntime(ts);
+		}
 
 		m_Framebuffer->Unbind();
 	}
@@ -255,7 +264,38 @@ namespace Hazel
 
 		ImGui::End();
 		ImGui::PopStyleVar();
-		
+
+		UI_ToolBar();
+
+		ImGui::End();
+	}
+
+	void EditorLayer::UI_ToolBar()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		const auto& colors = ImGui::GetStyle().Colors;
+		const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
+		const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+
+		ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+
+		float size = ImGui::GetWindowHeight() - 4.0f;
+		auto icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;
+		ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+		if (ImGui::ImageButton((ImTextureID)icon->GetRendererId(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
+		{
+			if (m_SceneState == SceneState::Edit)
+				OnScenePlay();
+			else if (m_SceneState == SceneState::Play)
+				OnSceneStop();
+		}
+
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(3);
 		ImGui::End();
 	}
 
@@ -401,5 +441,15 @@ namespace Hazel
 			return m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 
 		return -1;
+	}
+
+	void EditorLayer::OnScenePlay()
+	{
+		m_SceneState = SceneState::Play;
+	}
+
+	void EditorLayer::OnSceneStop()
+	{
+		m_SceneState = SceneState::Edit;
 	}
 }
