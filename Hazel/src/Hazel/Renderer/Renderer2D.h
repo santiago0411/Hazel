@@ -60,8 +60,8 @@ namespace Hazel
 		static void ResetStats();
 
 	private:
-		static float FindTextureIndex(const Ref<Texture2D>& texture);
-		static void LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, float textureIndex, float tilingFactor, int32_t entityId = -1);
+		static uint32_t FindTextureIndex(const Ref<Texture2D>& texture);
+		static void LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, uint32_t textureIndex, float tilingFactor, int32_t entityId = -1);
 
 		static void StartBatch();
 		static void NextBatch();

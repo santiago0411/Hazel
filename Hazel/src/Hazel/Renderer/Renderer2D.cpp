@@ -16,7 +16,7 @@ namespace Hazel
 		glm::vec3 Position;
 		glm::vec4 Color;
 		glm::vec2 TexCoord;
-		float TexIndex;
+		uint32_t TexIndex;
 		float TilingFactor;
 
 		// Editor-only
@@ -73,12 +73,12 @@ namespace Hazel
 		g_Data->QuadVertexBuffer = VertexBuffer::Create(Renderer2DData::MAX_VERTICES * sizeof(QuadVertex));
 		g_Data->QuadVertexBuffer->SetLayout(
 		{
-			{ ShaderDataType::Float3, "a_Position"		},
-			{ ShaderDataType::Float4, "a_Color"			},
-			{ ShaderDataType::Float2, "a_TexCoord"		},
-			{ ShaderDataType::Float,  "a_TexIndex"		},
-			{ ShaderDataType::Float,  "a_TilingFactor"	},
-			{ ShaderDataType::Int,	"a_EntityId"		},
+			{ ShaderDataType::Float3,	"a_Position"		},
+			{ ShaderDataType::Float4,	"a_Color"			},
+			{ ShaderDataType::Float2,	"a_TexCoord"		},
+			{ ShaderDataType::Int,		"a_TexIndex"		},
+			{ ShaderDataType::Float,	"a_TilingFactor"	},
+			{ ShaderDataType::Int,		"a_EntityId"		},
 		});
 		g_Data->QuadVertexArray->AddVertexBuffer(g_Data->QuadVertexBuffer);
 
@@ -291,7 +291,7 @@ namespace Hazel
 			NextBatch();
 
 		constexpr glm::vec2 textureCoords[]{ { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		constexpr float textureIndex = 0.0f; // White texture index
+		constexpr uint32_t textureIndex = 0; // White texture index
 		constexpr float tilingFactor = 1.0f;
 
 		LoadVertexData(transform, color, textureCoords, textureIndex, tilingFactor);
@@ -304,7 +304,7 @@ namespace Hazel
 		if (g_Data->QuadIndexCount >= Renderer2DData::MAX_INDICES)
 			NextBatch();
 
-		const float textureIndex = FindTextureIndex(texture);
+		const uint32_t textureIndex = FindTextureIndex(texture);
 		constexpr glm::vec2 textureCoords[]{ { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
 		LoadVertexData(transform, tintColor, textureCoords, textureIndex, tilingFactor);
@@ -317,7 +317,7 @@ namespace Hazel
 		if (g_Data->QuadIndexCount >= Renderer2DData::MAX_INDICES)
 			NextBatch();
 
-		const float textureIndex = FindTextureIndex(subTexture->GetTexture());
+		const uint32_t textureIndex = FindTextureIndex(subTexture->GetTexture());
 		const glm::vec2* textureCoords = subTexture->GetTexCoords();
 
 		LoadVertexData(transform, tintColor, textureCoords, textureIndex, tilingFactor);
@@ -331,30 +331,30 @@ namespace Hazel
 			NextBatch();
 
 		constexpr glm::vec2 textureCoords[]{ { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const float textureIndex = src.Texture ? FindTextureIndex(src.Texture) : 0.0f;
+		const uint32_t textureIndex = src.Texture ? FindTextureIndex(src.Texture) : 0;
 
 		LoadVertexData(transform, src.Color, textureCoords, textureIndex, src.TilingFactor, entityId);
 	}
 
-	float Renderer2D::FindTextureIndex(const Ref<Texture2D>& texture)
+	uint32_t Renderer2D::FindTextureIndex(const Ref<Texture2D>& texture)
 	{
-		float textureIndex = 0.0f;
+		uint32_t textureIndex = 0;
 
 		for (uint32_t i = 1; i < g_Data->TextureSlotIndex; i++)
 		{
 			if (*g_Data->TextureSlots[i] == *texture)
 			{
-				textureIndex = (float)i;
+				textureIndex = i;
 				break;
 			}
 		}
 
-		if (textureIndex == 0.0f)
+		if (textureIndex == 0)
 		{
 			if (g_Data->TextureSlotIndex >= Renderer2DData::MAX_TEXTURE_SLOTS)
 				NextBatch();
 
-			textureIndex = (float)g_Data->TextureSlotIndex;
+			textureIndex = g_Data->TextureSlotIndex;
 			g_Data->TextureSlots[g_Data->TextureSlotIndex] = texture;
 			g_Data->TextureSlotIndex++;
 		}
@@ -362,7 +362,7 @@ namespace Hazel
 		return textureIndex;
 	}
 
-	void Renderer2D::LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, float textureIndex, float tilingFactor, int32_t entityId)
+	void Renderer2D::LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, uint32_t textureIndex, float tilingFactor, int32_t entityId)
 	{
 		constexpr size_t quadVertexCount = 4;
 		for (size_t i = 0; i < quadVertexCount; i++)
