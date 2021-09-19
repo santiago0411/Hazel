@@ -109,6 +109,7 @@ namespace Hazel
 		g_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 		
 		g_Data->TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		g_Data->TextureShader->Bind();
 
 		g_Data->CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
 
@@ -179,7 +180,6 @@ namespace Hazel
 		for (uint32_t i = 0; i < g_Data->TextureSlotIndex; i++)
 			g_Data->TextureSlots[i]->Bind(i);
 
-		g_Data->TextureShader->Bind();
 		RenderCommand::DrawIndexed(g_Data->QuadVertexArray, g_Data->QuadIndexCount);
 		g_Data->Stats.DrawCalls++;
 	}
@@ -331,10 +331,9 @@ namespace Hazel
 			NextBatch();
 
 		constexpr glm::vec2 textureCoords[]{ { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		constexpr float textureIndex = 0.0f; // White texture index
-		constexpr float tilingFactor = 1.0f;
+		const float textureIndex = src.Texture ? FindTextureIndex(src.Texture) : 0.0f;
 
-		LoadVertexData(transform, src.Color, textureCoords, textureIndex, tilingFactor, entityId);
+		LoadVertexData(transform, src.Color, textureCoords, textureIndex, src.TilingFactor, entityId);
 	}
 
 	float Renderer2D::FindTextureIndex(const Ref<Texture2D>& texture)

@@ -13,6 +13,8 @@
 
 namespace Hazel
 {
+	extern const std::filesystem::path g_AssetsPath;
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
@@ -74,21 +76,6 @@ namespace Hazel
 		m_Framebuffer->ClearAttachment(1, -1);
 
 		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-		my = viewportSize.y - my;
-
-		const auto mouseX = (int32_t)mx;
-		const auto mouseY = (int32_t)my;
-
-		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int32_t)viewportSize.x && mouseY < (int32_t)viewportSize.y)
-		{
-			int32_t pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
-		}
 
 		m_Framebuffer->Unbind();
 	}
@@ -175,6 +162,7 @@ namespace Hazel
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_ContentBrowserPanel.OnImGuiRender();
 
 		ImGui::Begin("Renderer2D Stats");
 		auto stats = Renderer2D::GetStats();
@@ -201,6 +189,16 @@ namespace Hazel
 
 		uint64_t textureId = m_Framebuffer->GetColorAttachmentRendererId();
 		ImGui::Image((void*)textureId, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const auto path = (const wchar_t*)payload->Data;
+				OpenScene(std::filesystem::path(g_AssetsPath / path));
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		// Gizmos
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -302,22 +300,26 @@ namespace Hazel
 			// Gizmos
 			case Key::Q:
 			{
-				m_GizmoType = -1;
+				if (!ImGuizmo::IsUsing())
+					m_GizmoType = -1;
 				break;
 			}
 			case Key::W:
 			{
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				if (!ImGuizmo::IsUsing())
+					m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 				break;
 			}
 			case Key::E:
 			{
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+				if (!ImGuizmo::IsUsing())
+					m_GizmoType = ImGuizmo::OPERATION::ROTATE;
 				break;
 			}
 			case Key::R:
 			{
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+				if (!ImGuizmo::IsUsing())
+					m_GizmoType = ImGuizmo::OPERATION::SCALE;
 				break;
 			}
 		}
@@ -331,10 +333,15 @@ namespace Hazel
 		{
 			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
 			{
-				if (m_GizmoType == -1)
-					m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				int32_t pixelData = GetMouseOverPixelData();
+				if (pixelData != -1)
+				{
+					if (m_GizmoType == -1)
+						m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 
-				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+					m_SceneHierarchyPanel.SetSelectedEntity(Entity((entt::entity)pixelData, m_ActiveScene.get()));
+				}
+
 			}
 		}
 
@@ -352,15 +359,19 @@ namespace Hazel
 	{
 		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
 		if (filepath)
-		{
-			m_ActiveScene = CreateRef<Scene>();
-			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+			OpenScene(*filepath);
+	}
 
-			SceneSerializer serializer(m_ActiveScene);
-			if (!serializer.Deserialize(*filepath))
-				HZ_ERROR("Error loading scene '{0}'", *filepath);
-		}
+	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		SceneSerializer serializer(m_ActiveScene);
+		const std::string pathString = path.string();
+		if (!serializer.Deserialize(pathString))
+			HZ_ERROR("Error loading scene '{0}'", pathString);
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -371,5 +382,24 @@ namespace Hazel
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Serialize(*filepath);
 		}
+	}
+
+	int32_t EditorLayer::GetMouseOverPixelData() const
+	{
+		m_Framebuffer->Bind();
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		my = viewportSize.y - my;
+
+		const auto mouseX = (int32_t)mx;
+		const auto mouseY = (int32_t)my;
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int32_t)viewportSize.x && mouseY < (int32_t)viewportSize.y)
+			return m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+
+		return -1;
 	}
 }
