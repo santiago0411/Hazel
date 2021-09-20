@@ -55,6 +55,9 @@ namespace Hazel
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
+		if (entity.HasComponent<SceneComponent>())
+			return;
+
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
 
 		ImGuiTreeNodeFlags flags = (m_SelectionContext == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -214,16 +217,40 @@ namespace Hazel
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			if (ImGui::MenuItem("Camera"))
+			if (!m_SelectionContext.HasComponent<Camera>())
 			{
-				m_SelectionContext.AddComponent<CameraComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Camera"))
+				{
+					m_SelectionContext.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
-			if (ImGui::MenuItem("Sprite Renderer"))
+			if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
 			{
-				m_SelectionContext.AddComponent<SpriteRendererComponent>();
-				ImGui::CloseCurrentPopup();
+				if (ImGui::MenuItem("Sprite Renderer"))
+				{
+					m_SelectionContext.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
+			{
+				if (ImGui::MenuItem("Rigidbody 2D"))
+				{
+					m_SelectionContext.AddComponent<RigidBody2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
+			{
+				if (ImGui::MenuItem("Box Collider 2D"))
+				{
+					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
 			ImGui::EndPopup();
@@ -231,7 +258,7 @@ namespace Hazel
 
 		ImGui::PopItemWidth();
 
-		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
+		DrawComponent<TransformComponent>("Transform", entity, [](TransformComponent& component)
 		{
 			DrawVec3Control("Position", component.Position);
 			glm::vec3 rotation = glm::degrees(component.Rotation);
@@ -240,7 +267,7 @@ namespace Hazel
 			DrawVec3Control("Scale", component.Scale, 1.0f);
 		});
 
-		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
+		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& component)
 		{
 			auto& camera = component.Camera;
 
@@ -299,7 +326,7 @@ namespace Hazel
 			}
 		});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& component)
 		{
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
@@ -320,6 +347,42 @@ namespace Hazel
 			}
 
 			ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
+		});
+
+		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& component)
+		{
+			const char* bodyTypeStrings[]{ "Static", "Dynamic", "Kinematic" };
+			const char* currentBodyTypeString = bodyTypeStrings[(int32_t)component.Type];
+
+			if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
+			{
+				for (int32_t i = 0; i < 3; i++)
+				{
+					bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+					if (ImGui::Selectable(bodyTypeStrings[i], isSelected))
+					{
+						currentBodyTypeString = bodyTypeStrings[i];
+						component.Type = (RigidBody2DComponent::BodyType)i;
+					}
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+		});
+
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](BoxCollider2DComponent& component)
+		{
+			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset), 0.1f);
+			ImGui::DragFloat2("Size", glm::value_ptr(component.Size), 0.1f);
+			ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
 		});
 	}
 }

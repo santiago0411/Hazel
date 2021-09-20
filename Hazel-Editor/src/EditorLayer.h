@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Hazel.h>
-
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 
@@ -26,7 +25,9 @@ namespace Hazel
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
+		void SaveScene();
 		void SaveSceneAs();
+		void SerializeScene(const std::filesystem::path& path);
 
 		int32_t GetMouseOverPixelData() const;
 
@@ -37,6 +38,7 @@ namespace Hazel
 	private:
 		Ref<Framebuffer> m_Framebuffer;
 		Ref<Scene> m_ActiveScene;
+		std::filesystem::path m_ActiveScenePath;
 		EditorCamera m_EditorCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;

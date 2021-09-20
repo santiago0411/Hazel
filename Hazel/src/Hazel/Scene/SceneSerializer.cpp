@@ -10,6 +10,30 @@
 namespace YAML
 {
 	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
+
+	template<>
 	struct convert<glm::vec3>
 	{
 		static Node encode(const glm::vec3& rhs)
@@ -64,6 +88,13 @@ namespace YAML
 
 namespace Hazel
 {
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
+	{
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+		return out;
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
 		out << YAML::Flow;
@@ -76,6 +107,29 @@ namespace Hazel
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
 		return out;
+	}
+
+	static std::string Rigidbody2DBodyTypeToString(RigidBody2DComponent::BodyType bodyType)
+	{
+		switch (bodyType)
+		{
+			case RigidBody2DComponent::BodyType::Static:	return "Static";
+			case RigidBody2DComponent::BodyType::Dynamic:	return "Dynamic";
+			case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
+		}
+
+		HZ_CORE_ASSERT(false);
+		return {};
+	}
+
+	static RigidBody2DComponent::BodyType Rigidbody2DBodyTypeFromString(const std::string& bodyTypeString)
+	{
+		if (bodyTypeString == "Static")		return RigidBody2DComponent::BodyType::Static;
+		if (bodyTypeString == "Dynamic")	return RigidBody2DComponent::BodyType::Dynamic;
+		if (bodyTypeString == "Kinematic")	return RigidBody2DComponent::BodyType::Kinematic;
+
+		HZ_CORE_ASSERT(false);
+		return RigidBody2DComponent::BodyType::Static;
 	}
 
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
@@ -148,6 +202,34 @@ namespace Hazel
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
 
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			out << YAML::Key << "RigidBody2DComponent";
+			out << YAML::BeginMap; // RigidBody2DComponent
+
+			const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			out << YAML::Key << "BodyType" << YAML::Value << Rigidbody2DBodyTypeToString(rb2d.Type);
+			out << YAML::Key << "FixedRotation" << YAML::Value << rb2d.FixedRotation;
+
+			out << YAML::EndMap; // RigidBody2DComponent
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::BeginMap; // BoxCollider2DComponent
+
+			const auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << bc2d.Offset;
+			out << YAML::Key << "Size" << YAML::Value << bc2d.Size;
+			out << YAML::Key << "Density" << YAML::Value << bc2d.Density;
+			out << YAML::Key << "Friction" << YAML::Value << bc2d.Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << bc2d.Restitution;
+			out << YAML::Key << "RestitutionThreshold" << YAML::Value << bc2d.RestitutionThreshold;
+
+			out << YAML::EndMap; // BoxCollider2DComponent
+		}
+
 		out << YAML::EndMap; // Entity
 	}
 
@@ -158,13 +240,13 @@ namespace Hazel
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityId)
-			{
-				Entity entity = { entityId, m_Scene.get() };
-				if (!entity)
-					return;
+		{
+			Entity entity = { entityId, m_Scene.get() };
+			if (!entity || entity.HasComponent<SceneComponent>())
+				return;
 
-				SerializeEntity(out, entity);
-			});
+			SerializeEntity(out, entity);
+		});
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
@@ -185,8 +267,9 @@ namespace Hazel
 		{
 			data = YAML::LoadFile(filepath);
 		}
-		catch (YAML::ParserException e)
+		catch (YAML::ParserException& e)
 		{
+			HZ_CORE_ERROR("Error parsing scene file. {0}", e.msg);
 			return false;
 		}
 
@@ -196,24 +279,21 @@ namespace Hazel
 		auto sceneName = data["Scene"].as<std::string>();
 		HZ_CORE_TRACE("Deserializing scene '{0}'", sceneName);
 
-		auto entities = data["Entities"];
-		if (entities)
+		if (auto entities = data["Entities"])
 		{
 			for (auto entity : entities)
 			{
 				uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO
 
 				std::string name;
-				auto tagComponent = entity["TagComponent"];
-				if (tagComponent)
+				if (auto tagComponent = entity["TagComponent"])
 					name = tagComponent["Tag"].as<std::string>();
 
 				HZ_CORE_TRACE("Deserialize entity with ID = {0}, name = {1}", uuid, name);
 
 				Entity deserializedEntity = m_Scene->CreateEntity(name);
 
-				auto transformComponent = entity["TransformComponent"];
-				if (transformComponent)
+				if (auto transformComponent = entity["TransformComponent"])
 				{
 					// Entities always have transforms
 					auto& tc = deserializedEntity.GetComponent<TransformComponent>();
@@ -222,8 +302,7 @@ namespace Hazel
 					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
 
-				auto cameraComponent = entity["CameraComponent"];
-				if (cameraComponent)
+				if (auto cameraComponent = entity["CameraComponent"])
 				{
 					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
 
@@ -242,11 +321,28 @@ namespace Hazel
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				}
 
-				auto spriteRendererComponent = entity["SpriteRendererComponent"];
-				if (spriteRendererComponent)
+				if (auto spriteRendererComponent = entity["SpriteRendererComponent"])
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as <glm::vec4>();
+				}
+
+				if (auto rigidbody2DComponent = entity["RigidBody2DComponent"])
+				{
+					auto& rb2d = deserializedEntity.AddComponent<RigidBody2DComponent>();
+					rb2d.Type = Rigidbody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
+					rb2d.FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
+				}
+
+				if (auto boxCollider2DComponent = entity["BoxCollider2DComponent"])
+				{
+					auto& bc2d = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+					bc2d.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+					bc2d.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+					bc2d.Density = boxCollider2DComponent["Density"].as<float>();
+					bc2d.Friction = boxCollider2DComponent["Friction"].as<float>();
+					bc2d.Restitution = boxCollider2DComponent["Restitution"].as<float>();
+					bc2d.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
 				}
 			}
 		}

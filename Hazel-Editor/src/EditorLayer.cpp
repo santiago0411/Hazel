@@ -332,8 +332,13 @@ namespace Hazel
 			}
 			case Key::S:
 			{
-				if (control && shift)
-					SaveSceneAs();
+				if (control)
+				{
+					if (shift)
+						SaveSceneAs();
+					else
+						SaveScene();
+				}
 				break;
 			}
 
@@ -393,6 +398,7 @@ namespace Hazel
 		m_ActiveScene = CreateRef<Scene>();
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_ActiveScenePath = "";
 	}
 
 	void EditorLayer::OpenScene()
@@ -410,13 +416,23 @@ namespace Hazel
 			return;
 		}
 
-		SceneSerializer serializer(m_ActiveScene);
+		auto newScene = CreateRef<Scene>();
+		SceneSerializer serializer(newScene);
 		if (serializer.Deserialize(path.string()))
 		{
-			m_ActiveScene = CreateRef<Scene>();
+			m_ActiveScene = newScene;
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+			m_ActiveScenePath = path;
 		}
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (m_ActiveScenePath.empty())
+			SaveSceneAs();
+		else
+			SerializeScene(m_ActiveScenePath);
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -424,9 +440,17 @@ namespace Hazel
 		const std::optional<std::string> filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
 		if (filepath)
 		{
-			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(*filepath);
+			SerializeScene(*filepath);
+			m_ActiveScenePath = *filepath;
 		}
+	}
+
+	void EditorLayer::SerializeScene(const std::filesystem::path& path)
+	{
+		HZ_CORE_ASSERT(!path.empty());
+
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Serialize(path.string());
 	}
 
 	int32_t EditorLayer::GetMouseOverPixelData() const
@@ -451,10 +475,12 @@ namespace Hazel
 	void EditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		m_ActiveScene->OnRuntimeStart();
 	}
 
 	void EditorLayer::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		m_ActiveScene->OnRuntimeStop();
 	}
 }

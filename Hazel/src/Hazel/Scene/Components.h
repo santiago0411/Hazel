@@ -1,18 +1,26 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
+#include "Hazel/Core/UUID.h"
 
 #include "Hazel/Scene/SceneCamera.h"
 #include "Hazel/Scene/ScriptableEntity.h"
 
 #include "Hazel/Renderer/Texture.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 namespace Hazel
 {
+	// For internal use
+	struct SceneComponent
+	{
+		UUID SceneId;
+	};
+
 	struct TagComponent
 	{
 		std::string Tag;
@@ -79,5 +87,35 @@ namespace Hazel
 			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
+	};
+
+	// Physics
+
+	struct RigidBody2DComponent
+	{
+		enum class BodyType { Static = 0, Dynamic, Kinematic };
+		BodyType Type = BodyType::Static;
+		bool FixedRotation = false;
+
+		void* RuntimeBody = nullptr;
+
+		RigidBody2DComponent() = default;
+		RigidBody2DComponent(const RigidBody2DComponent&) = default;
+	};
+
+	struct BoxCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		glm::vec2 Size = { 0.5f, 0.5f };
+
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		void* RuntimeFixture = nullptr;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
 	};
 }
