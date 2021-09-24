@@ -15,10 +15,12 @@ namespace Hazel
 	class Scene
 	{
 	public:
-		Scene();
+		Scene() = default;
 		~Scene() = default;
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntityWithUuid(UUID uuid, const std::string& name = std::string());
+		void DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
@@ -29,6 +31,8 @@ namespace Hazel
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		Entity GetPrimaryCameraEntity();
+
+		static Ref<Scene> Copy(const Ref<Scene>& scene);
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -37,8 +41,6 @@ namespace Hazel
 		UUID m_SceneId;
 		entt::registry m_Registry;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
-
-		entt::entity m_SceneEntity;
 
 		b2World* m_PhysicsWorld = nullptr;
 

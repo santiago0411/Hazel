@@ -33,7 +33,8 @@ namespace Hazel
 		framebufferSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(framebufferSpec);
 
-		m_ActiveScene = CreateRef<Scene>();
+		m_EditorScene = CreateRef<Scene>();
+		m_ActiveScene = m_EditorScene;
 
 		auto commandLineArgs = Application::Get().GetCommandLineArgs();
 		if (commandLineArgs.Count > 1)
@@ -73,7 +74,7 @@ namespace Hazel
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		RenderCommand::Clear();
 
-		// Clear entity id attachment to -1
+		// Clear EntityId (index 1) attachment to -1
 		m_Framebuffer->ClearAttachment(1, -1);
 
 		if (m_SceneState == SceneState::Edit)
@@ -159,11 +160,15 @@ namespace Hazel
 				if (ImGui::MenuItem("Open...", "Ctrl+O"))
 					OpenScene();
 
+				if (ImGui::MenuItem("Save", "Ctrl+S"))
+					SaveScene();
+
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
 					SaveSceneAs();
 
 				if (ImGui::MenuItem("Exit")) 
 					Application::Get().Close();
+
 				ImGui::EndMenu();
 			}
 
@@ -341,6 +346,12 @@ namespace Hazel
 				}
 				break;
 			}
+			case Key::D:
+			{
+				if (control)
+					DuplicateSelectedEntity();
+				break;
+			}
 
 			// Gizmos
 			case Key::Q:
@@ -410,6 +421,9 @@ namespace Hazel
 
 	void EditorLayer::OpenScene(const std::filesystem::path& path)
 	{
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
+
 		if (path.extension().string() != ".hazel")
 		{
 			HZ_WARN("Could not load {0} - not a scene file", path.filename().string());
@@ -420,7 +434,8 @@ namespace Hazel
 		SceneSerializer serializer(newScene);
 		if (serializer.Deserialize(path.string()))
 		{
-			m_ActiveScene = newScene;
+			m_EditorScene = newScene;
+			m_ActiveScene = m_EditorScene;
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 			m_ActiveScenePath = path;
@@ -475,12 +490,28 @@ namespace Hazel
 	void EditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+
+		m_RuntimeScene = Scene::Copy(m_EditorScene);
+		m_ActiveScene = m_RuntimeScene;
 		m_ActiveScene->OnRuntimeStart();
 	}
 
 	void EditorLayer::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+
+		m_ActiveScene = m_EditorScene;
+		m_RuntimeScene = nullptr;
 		m_ActiveScene->OnRuntimeStop();
+	}
+
+	void EditorLayer::DuplicateSelectedEntity()
+	{
+		if (m_SceneState != SceneState::Edit)
+			return;
+
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity)
+			m_EditorScene->DuplicateEntity(selectedEntity);
 	}
 }

@@ -3,7 +3,6 @@
 #include "Hazel/Core/UUID.h"
 
 #include "Hazel/Scene/SceneCamera.h"
-#include "Hazel/Scene/ScriptableEntity.h"
 
 #include "Hazel/Renderer/Texture.h"
 
@@ -16,9 +15,13 @@
 namespace Hazel
 {
 	// For internal use
-	struct SceneComponent
+	struct IdComponent
 	{
-		UUID SceneId;
+		UUID Id;
+
+		IdComponent() = default;
+		IdComponent(const IdComponent&) = default;
+		IdComponent(UUID uuid) : Id(uuid) {}
 	};
 
 	struct TagComponent
@@ -73,6 +76,9 @@ namespace Hazel
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 	};
+
+
+	class ScriptableEntity;
 
 	struct NativeScriptComponent
 	{

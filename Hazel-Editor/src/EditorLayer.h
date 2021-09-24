@@ -34,10 +34,13 @@ namespace Hazel
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void DuplicateSelectedEntity();
+
 		void UI_ToolBar();
 	private:
 		Ref<Framebuffer> m_Framebuffer;
 		Ref<Scene> m_ActiveScene;
+		Ref<Scene> m_EditorScene, m_RuntimeScene;
 		std::filesystem::path m_ActiveScenePath;
 		EditorCamera m_EditorCamera;
 

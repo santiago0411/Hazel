@@ -2,6 +2,7 @@
 #include "Hazel/Scene/Scene.h"
 
 #include "Hazel/Scene/Entity.h"
+#include "Hazel/Scene/ScriptableEntity.h"
 #include "Hazel/Scene/Components.h"
 
 #include "Hazel/Renderer/Renderer2D.h"
@@ -14,8 +15,6 @@
 namespace Hazel
 {
 	using EntityId = entt::entity;
-
-	static std::unordered_map<UUID, Scene*> g_ActiveScenes;
 
 	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
 	{
@@ -30,19 +29,80 @@ namespace Hazel
 		return b2_staticBody;
 	}
 
-	Scene::Scene()
+	template<typename Component>
+	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, EntityId>& enttMap)
 	{
-		m_SceneEntity = m_Registry.create();
-		m_Registry.emplace<SceneComponent>(m_SceneEntity, m_SceneId);
+		src.view<Component>().each([&](EntityId srcEntity, Component& srcComponent)
+		{
+			EntityId dstEntity = enttMap.at(src.get<IdComponent>(srcEntity).Id);
+			dst.emplace_or_replace<Component>(dstEntity, srcComponent);
+		});
+	}
+
+	template<typename Component>
+	static void CopyComponentIfExists(Entity dst, Entity src)
+	{
+		if (src.HasComponent<Component>())
+			dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+	}
+
+	Ref<Scene> Scene::Copy(const Ref<Scene>& scene)
+	{
+		auto newScene = CreateRef<Scene>();
+
+		newScene->m_ViewportWidth = scene->m_ViewportWidth;
+		newScene->m_ViewportHeight = scene->m_ViewportHeight;
+
+		std::unordered_map<UUID, EntityId> enttMap;
+
+		// Create entities in the new scene
+		auto& srcSceneRegistry = scene->m_Registry;
+		auto& dstSceneRegistry = newScene->m_Registry;
+
+		srcSceneRegistry.view<IdComponent, TagComponent>().each(
+			[&](const IdComponent& idComponent, const TagComponent& tagComponent)
+			{
+				auto uuid = idComponent.Id;
+				Entity newEntity = newScene->CreateEntityWithUuid(uuid, tagComponent.Tag);
+				enttMap[uuid] = newEntity;
+			});
+
+		// Copy components (except IdComponent and TagComponent)
+		CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+
+		return newScene;
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
+		return CreateEntityWithUuid(UUID(), name);
+	}
+
+	Entity Scene::CreateEntityWithUuid(UUID uuid, const std::string& name)
+	{
 		Entity entity{ m_Registry.create(), this };
+		entity.AddComponent<IdComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
 		return entity;
+	}
+
+	void Scene::DuplicateEntity(Entity entity)
+	{
+		Entity newEntity = CreateEntity(entity.GetName());
+
+		CopyComponentIfExists<TransformComponent>(newEntity, entity);
+		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
+		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
+		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
 	}
 
 	void Scene::DestroyEntity(Entity entity)
@@ -52,8 +112,6 @@ namespace Hazel
 
 	void Scene::OnRuntimeStart()
 	{
-		g_ActiveScenes[m_SceneId] = this;
-
 		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
 
 		m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
@@ -97,7 +155,6 @@ namespace Hazel
 
 	void Scene::OnRuntimeStop()
 	{
-		g_ActiveScenes.erase(m_SceneId);
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
 	}
@@ -201,6 +258,11 @@ namespace Hazel
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
 		static_assert(false);
+	}
+
+	template<>
+	void Scene::OnComponentAdded<IdComponent>(Entity entity, IdComponent& component)
+	{
 	}
 
 	template<>
