@@ -409,7 +409,7 @@ namespace Hazel
 		m_ActiveScene = CreateRef<Scene>();
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-		m_ActiveScenePath = "";
+		m_ActiveScenePath = std::filesystem::path();
 	}
 
 	void EditorLayer::OpenScene()
@@ -460,7 +460,7 @@ namespace Hazel
 		}
 	}
 
-	void EditorLayer::SerializeScene(const std::filesystem::path& path)
+	void EditorLayer::SerializeScene(const std::filesystem::path& path) const
 	{
 		HZ_CORE_ASSERT(!path.empty());
 

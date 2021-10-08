@@ -44,6 +44,8 @@ namespace Hazel
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4 tintColor = glm::vec4(1.0f));
 		static void DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4 tintColor = glm::vec4(1.0f));
 
+		static void DrawCircle(const glm::mat4& transform, float thickness, const glm::vec4& color, int32_t entityId = -1);
+
 		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int32_t entityId);
 
 		// Stats
@@ -51,6 +53,7 @@ namespace Hazel
 		{
 			uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;
+			uint32_t CircleCount = 0;
 
 			uint32_t GetTotalVertexCount() const { return QuadCount * 4; }
 			uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
@@ -61,7 +64,7 @@ namespace Hazel
 
 	private:
 		static uint32_t FindTextureIndex(const Ref<Texture2D>& texture);
-		static void LoadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, uint32_t textureIndex, float tilingFactor, int32_t entityId = -1);
+		static void LoadQuadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, uint32_t textureIndex, float tilingFactor, int32_t entityId = -1);
 
 		static void StartBatch();
 		static void NextBatch();

@@ -29,21 +29,49 @@ namespace Hazel
 		return b2_staticBody;
 	}
 
-	template<typename Component>
+	template<typename ... Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, EntityId>& enttMap)
 	{
-		src.view<Component>().each([&](EntityId srcEntity, Component& srcComponent)
-		{
-			EntityId dstEntity = enttMap.at(src.get<IdComponent>(srcEntity).Id);
-			dst.emplace_or_replace<Component>(dstEntity, srcComponent);
-		});
+		([&]()
+			{
+				src.view<Component>().each([&](EntityId srcEntity, Component& srcComponent)
+				{
+					EntityId dstEntity = enttMap.at(src.get<IdComponent>(srcEntity).Id);
+					dst.emplace_or_replace<Component>(dstEntity, srcComponent);
+				});
+			}(), ...);
 	}
 
-	template<typename Component>
+	template<typename ... Component>
+	static void CopyComponent(ComponentGroup<Component...>, entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, EntityId>& enttMap)
+	{
+		CopyComponent<Component...>(dst, src, enttMap);
+	}
+
+	template<typename ... Component>
 	static void CopyComponentIfExists(Entity dst, Entity src)
 	{
-		if (src.HasComponent<Component>())
-			dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+		([&]()
+			{
+				if (src.HasComponent<Component>())
+					dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+			}(), ...);
+	}
+
+	template<typename ... Component>
+	static void CopyComponentIfExists(ComponentGroup<Component...>, Entity dst, Entity src)
+	{
+		CopyComponentIfExists<Component...>(dst, src);
+	}
+
+	static void CopyAllComponents(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, EntityId>& enttMap)
+	{
+		CopyComponent(AllComponents{}, dst, src, enttMap);
+	}
+
+	static void CopyAllExistingComponents(Entity dst, Entity src)
+	{
+		CopyComponentIfExists(AllComponents{}, dst, src);
 	}
 
 	Ref<Scene> Scene::Copy(const Ref<Scene>& scene)
@@ -59,7 +87,7 @@ namespace Hazel
 		auto& srcSceneRegistry = scene->m_Registry;
 		auto& dstSceneRegistry = newScene->m_Registry;
 
-		srcSceneRegistry.view<IdComponent, TagComponent>().each(
+		srcSceneRegistry.group<IdComponent, TagComponent>().each(
 			[&](const IdComponent& idComponent, const TagComponent& tagComponent)
 			{
 				auto uuid = idComponent.Id;
@@ -67,13 +95,7 @@ namespace Hazel
 				enttMap[uuid] = newEntity;
 			});
 
-		// Copy components (except IdComponent and TagComponent)
-		CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<RigidBody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-		CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+		CopyAllComponents(dstSceneRegistry, srcSceneRegistry, enttMap);
 
 		return newScene;
 	}
@@ -96,13 +118,7 @@ namespace Hazel
 	void Scene::DuplicateEntity(Entity entity)
 	{
 		Entity newEntity = CreateEntity(entity.GetName());
-
-		CopyComponentIfExists<TransformComponent>(newEntity, entity);
-		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
-		CopyComponentIfExists<CameraComponent>(newEntity, entity);
-		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
-		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
-		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
+		CopyAllExistingComponents(newEntity, entity);
 	}
 
 	void Scene::DestroyEntity(Entity entity)
@@ -168,6 +184,11 @@ namespace Hazel
 			Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
 		});
 
+		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
+		{
+			Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Color, (int32_t)entityId);
+		});
+
 		Renderer2D::EndScene();
 	}
 
@@ -223,6 +244,11 @@ namespace Hazel
 			m_Registry.group<TransformComponent, SpriteRendererComponent>().each([](EntityId entityId, TransformComponent& tc, SpriteRendererComponent& src)
 			{
 				Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
+			});
+
+			m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
+			{
+				Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Color, (int32_t)entityId);
 			});
 
 			Renderer2D::EndScene();
@@ -284,6 +310,11 @@ namespace Hazel
 
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
 	{
 	}
 

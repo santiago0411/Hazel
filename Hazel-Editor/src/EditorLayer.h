@@ -27,7 +27,7 @@ namespace Hazel
 		void OpenScene(const std::filesystem::path& path);
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(const std::filesystem::path& path);
+		void SerializeScene(const std::filesystem::path& path) const;
 
 		int32_t GetMouseOverPixelData() const;
 
