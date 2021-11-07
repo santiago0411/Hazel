@@ -25,8 +25,9 @@ namespace Hazel
 
 		void* GetNativeWindow() const override { return m_Window; }
 	private:
-		virtual void Init(const WindowProps& props);
-		virtual void Shutdown();
+		void Init(const WindowProps& props);
+		void CreateGlfwWindow();
+		void Shutdown();
 	private:
 		GLFWwindow* m_Window;
 		Scope<GraphicsContext> m_Context;

@@ -58,8 +58,8 @@ namespace Hazel
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		#endif
-			m_Window = glfwCreateWindow((int32_t)props.Width, (int32_t)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-			g_GLFWWindowCount++;
+
+			CreateGlfwWindow();
 		}
 			
 		m_Context = GraphicsContext::Create(m_Window);
@@ -156,6 +156,33 @@ namespace Hazel
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);
 		});
+	}
+
+	void WindowsWindow::CreateGlfwWindow()
+	{
+		int32_t count;
+		int32_t monitorX, monitorY;
+
+		// Get the monitor viewport and the video mode spec
+		GLFWmonitor** monitors = glfwGetMonitors(&count);
+		glfwGetMonitorPos(monitors[0], &monitorX, &monitorY);
+		const GLFWvidmode* videoMode = glfwGetVideoMode(monitors[0]);
+
+		// Set the visibility hint to to false for the window creation
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+		// Create the glfw window
+		m_Window = glfwCreateWindow((int32_t)m_Data.Width, (int32_t)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
+
+		// Set its position to be centered based on the width and height of the monitor
+		glfwSetWindowPos(m_Window, 
+			monitorX + (int32_t)((videoMode->width - m_Data.Width) / 2), 
+			monitorY + (int32_t)((videoMode->height - m_Data.Height )/ 2));
+
+
+		// Finally show the window and increase the window count
+		glfwShowWindow(m_Window);
+		g_GLFWWindowCount++;
 	}
 
 	void WindowsWindow::Shutdown()

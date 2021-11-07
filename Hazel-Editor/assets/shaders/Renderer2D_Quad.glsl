@@ -30,6 +30,7 @@ void main()
 	Output.TexCoord = a_TexCoord;
 	Output.TilingFactor = a_TilingFactor;
 	v_TexIndex = a_TexIndex;
+
 	v_EntityId = a_EntityId;
 
 	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);

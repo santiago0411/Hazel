@@ -26,8 +26,9 @@ namespace Hazel
 	struct CircleVertex
 	{
 		glm::vec3 WorldPosition;
-		float Thickness;
 		glm::vec2 LocalPosition;
+		float Thickness;
+		float Fade;
 		glm::vec4 Color;
 
 		// Editor-only
@@ -44,7 +45,7 @@ namespace Hazel
 		// Quads
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> TextureShader;
+		Ref<Shader> QuadShader;
 		Ref<Texture2D> WhiteTexture;
 
 		uint32_t QuadIndexCount = 0;
@@ -136,22 +137,23 @@ namespace Hazel
 			s_Data->CircleVertexBuffer->SetLayout(
 				{
 					{ ShaderDataType::Float3,	"a_WorldPosition"	},
-					{ ShaderDataType::Float,	"a_Thickness"		},
 					{ ShaderDataType::Float2,	"a_LocalPosition"	},
+					{ ShaderDataType::Float,	"a_Thickness"		},
+					{ ShaderDataType::Float,	"a_Fade"			},
 					{ ShaderDataType::Float4,	"a_Color"			},
 					{ ShaderDataType::Int,		"a_EntityId"		}
 				});
 			s_Data->CircleVertexArray->AddVertexBuffer(s_Data->CircleVertexBuffer);
 
 			s_Data->CircleVertexBufferBase = new CircleVertex[Renderer2DData::MAX_VERTICES];
-			s_Data->CircleVertexArray->SetIndexBuffer(s_Data->QuadVertexArray->GetIndexBuffer());
+			s_Data->CircleVertexArray->SetIndexBuffer(s_Data->QuadVertexArray->GetIndexBuffer()); // Use quad IB
 		}
 
 		s_Data->WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 		
-		s_Data->TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data->QuadShader = Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
 		s_Data->CircleShader = Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
 
 		s_Data->CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
@@ -226,7 +228,7 @@ namespace Hazel
 			for (uint32_t i = 0; i < s_Data->TextureSlotIndex; i++)
 				s_Data->TextureSlots[i]->Bind(i);
 
-			s_Data->TextureShader->Bind();
+			s_Data->QuadShader->Bind();
 			RenderCommand::DrawIndexed(s_Data->QuadVertexArray, s_Data->QuadIndexCount);
 			s_Data->Stats.DrawCalls++;
 		}
@@ -381,15 +383,19 @@ namespace Hazel
 		LoadQuadVertexData(transform, tintColor, textureCoords, textureIndex, tilingFactor);
 	}
 
-	void Renderer2D::DrawCircle(const glm::mat4& transform, float thickness, const glm::vec4& color, int32_t entityId)
+	void Renderer2D::DrawCircle(const glm::mat4& transform, float thickness, float fade, const glm::vec4& color, int32_t entityId)
 	{
-		constexpr size_t circleVertexCount = 4;
+		HZ_PROFILE_FUNCTION();
 
-		for (size_t i = 0; i < circleVertexCount; i++)
+		if (s_Data->CircleIndexCount >= Renderer2DData::MAX_INDICES)
+			NextBatch();
+
+		for (size_t i = 0; i < 4; i++)
 		{
 			s_Data->CircleVertexBufferPtr->WorldPosition = transform * s_Data->QuadVertexPositions[i];
-			s_Data->CircleVertexBufferPtr->Thickness = thickness;
 			s_Data->CircleVertexBufferPtr->LocalPosition = s_Data->QuadVertexPositions[i] * 2.0f;
+			s_Data->CircleVertexBufferPtr->Thickness = thickness;
+			s_Data->CircleVertexBufferPtr->Fade = fade;
 			s_Data->CircleVertexBufferPtr->Color = color;
 			s_Data->CircleVertexBufferPtr->EntityId = entityId;
 			s_Data->CircleVertexBufferPtr++;
@@ -441,8 +447,7 @@ namespace Hazel
 
 	void Renderer2D::LoadQuadVertexData(const glm::mat4& transform, const glm::vec4& color, glm::vec2 const* textureCoords, uint32_t textureIndex, float tilingFactor, int32_t entityId)
 	{
-		constexpr size_t quadVertexCount = 4;
-		for (size_t i = 0; i < quadVertexCount; i++)
+		for (size_t i = 0; i < 4; i++)
 		{
 			s_Data->QuadVertexBufferPtr->Position = transform * s_Data->QuadVertexPositions[i];
 			s_Data->QuadVertexBufferPtr->Color = color;

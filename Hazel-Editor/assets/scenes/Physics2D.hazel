@@ -122,19 +122,10 @@ Entities:
     TagComponent:
       Tag: Circle
     TransformComponent:
-      Position: [1.77383852, 5.70691633, 0.121639252]
+      Position: [1.77383852, 5.70691633, 3.83721232]
       Rotation: [0, 0, -0.635143816]
       Scale: [0.999999881, 0.999999881, 1]
     CircleRendererComponent:
       Color: [1, 0, 0, 1]
-      Thickness: 1
-    RigidBody2DComponent:
-      BodyType: Dynamic
-      FixedRotation: false
-    BoxCollider2DComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Friction: 0.5
-      Restitution: 0.479999989
-      RestitutionThreshold: 0.5
+      Thickness: 0.524999976
+      Fade: 0.00499999989

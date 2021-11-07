@@ -186,7 +186,7 @@ namespace Hazel
 
 		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
 		{
-			Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Color, (int32_t)entityId);
+			Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Fade, crc.Color, (int32_t)entityId);
 		});
 
 		Renderer2D::EndScene();
@@ -248,7 +248,7 @@ namespace Hazel
 
 			m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
 			{
-				Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Color, (int32_t)entityId);
+				Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Fade, crc.Color, (int32_t)entityId);
 			});
 
 			Renderer2D::EndScene();
