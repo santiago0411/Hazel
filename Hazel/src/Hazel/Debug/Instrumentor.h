@@ -71,7 +71,7 @@ namespace Hazel
 			json << R"(,{)";
 			json << R"("cat":"function",)";
 			json << R"("dur":)" << result.ElapsedTime.count() << ",";
-			json << R"("name":")" << result.Name << ",";
+			json << R"("name":")" << result.Name << "\",";
 			json << R"("ph":"X",)";
 			json << R"("pid":0,)";
 			json << R"("tid":)" << result.ThreadId << ",";
