@@ -232,6 +232,7 @@ namespace Hazel
 			TryListComponent<CircleRendererComponent>(m_SelectionContext, "Circle Renderer");
 			TryListComponent<RigidBody2DComponent>(m_SelectionContext, "Rigidbody 2D");
 			TryListComponent<BoxCollider2DComponent>(m_SelectionContext, "Box Collider 2D");
+			TryListComponent<CircleCollider2DComponent>(m_SelectionContext, "Circle Collider 2D");
 			ImGui::EndPopup();
 		}
 
@@ -365,6 +366,16 @@ namespace Hazel
 		{
 			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset), 0.1f);
 			ImGui::DragFloat2("Size", glm::value_ptr(component.Size), 0.1f);
+			ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+		});
+
+		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](CircleCollider2DComponent& component)
+		{
+			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset), 0.1f);
+			ImGui::DragFloat("Radius", &component.Radius, 0.01f, 0.0f);
 			ImGui::DragFloat("Density", &component.Density, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
