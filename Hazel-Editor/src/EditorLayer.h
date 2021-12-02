@@ -22,6 +22,8 @@ namespace Hazel
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+		void OnOverlayRender();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -49,6 +51,8 @@ namespace Hazel
 		glm::vec2 m_ViewportBounds[2];
 
 		int32_t m_GizmoType = -1;
+
+		bool m_ShowPhysicsColliders = false;
 
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;

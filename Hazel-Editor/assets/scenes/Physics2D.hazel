@@ -9,7 +9,7 @@ Entities:
       Scale: [0.999999881, 0.999999881, 1]
     CircleRendererComponent:
       Color: [1, 0, 0, 1]
-      Thickness: 0.524999976
+      Thickness: 0.075000003
       Fade: 0.00499999989
     RigidBody2DComponent:
       BodyType: Dynamic

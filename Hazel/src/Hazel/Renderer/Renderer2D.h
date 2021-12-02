@@ -44,7 +44,7 @@ namespace Hazel
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4 tintColor = glm::vec4(1.0f));
 		static void DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, float tilingFactor = 1.0f, const glm::vec4 tintColor = glm::vec4(1.0f));
 
-		static void DrawCircle(const glm::mat4& transform, float thickness, float fade, const glm::vec4& color, int32_t entityId = -1);
+		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f, int32_t entityId = -1);
 
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int32_t entityId = -1);
 

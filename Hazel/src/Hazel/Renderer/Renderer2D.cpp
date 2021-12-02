@@ -434,7 +434,7 @@ namespace Hazel
 		LoadQuadVertexData(transform, tintColor, textureCoords, textureIndex, tilingFactor);
 	}
 
-	void Renderer2D::DrawCircle(const glm::mat4& transform, float thickness, float fade, const glm::vec4& color, int32_t entityId)
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int32_t entityId)
 	{
 		HZ_PROFILE_FUNCTION();
 

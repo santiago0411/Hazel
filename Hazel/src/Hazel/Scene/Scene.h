@@ -18,6 +18,8 @@ namespace Hazel
 		Scene() = default;
 		~Scene() = default;
 
+		static Ref<Scene> Copy(const Ref<Scene>& scene);
+
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUuid(UUID uuid, const std::string& name = std::string());
 		void DuplicateEntity(Entity entity);
@@ -32,7 +34,11 @@ namespace Hazel
 
 		Entity GetPrimaryCameraEntity();
 
-		static Ref<Scene> Copy(const Ref<Scene>& scene);
+		template<typename... Components>
+		auto GetAllEntitiesWith()
+		{
+			return m_Registry.view<Components...>();
+		}
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

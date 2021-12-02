@@ -167,7 +167,7 @@ namespace Hazel
 
 				b2CircleShape circleShape;
 				circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
-				circleShape.m_radius = cc2d.Radius;
+				circleShape.m_radius = transform.Scale.x * cc2d.Radius;
 
 				b2FixtureDef fixtureDef;
 				fixtureDef.shape = &circleShape;
@@ -204,7 +204,7 @@ namespace Hazel
 
 		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
 		{
-			Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Fade, crc.Color, (int32_t)entityId);
+			Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
 		});
 
 		Renderer2D::EndScene();
@@ -262,11 +262,12 @@ namespace Hazel
 			m_Registry.group<TransformComponent, SpriteRendererComponent>().each([](EntityId entityId, TransformComponent& tc, SpriteRendererComponent& src)
 			{
 				Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
+				
 			});
 
 			m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
 			{
-				Renderer2D::DrawCircle(tc.GetTransform(), crc.Thickness, crc.Fade, crc.Color, (int32_t)entityId);
+				Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
 			});
 
 			Renderer2D::EndScene();
