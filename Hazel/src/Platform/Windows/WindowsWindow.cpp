@@ -1,6 +1,8 @@
 #include "hzpch.h"
 #include "Platform/Windows/WindowsWindow.h"
 
+#include <glad/glad.h>
+
 #include "Hazel/Core/Input.h"
 
 #include "Hazel/Events/ApplicationEvent.h"
@@ -20,29 +22,30 @@ namespace Hazel
 		HZ_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 	
-	WindowsWindow::WindowsWindow(const WindowProps& props)
+	WindowsWindow::WindowsWindow(const WindowSpecification& specification)
+		: m_Specification(specification)
 	{
 		HZ_PROFILE_FUNCTION();
 
-		WindowsWindow::Init(props);
+		Init();
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
 		HZ_PROFILE_FUNCTION();
 
-		WindowsWindow::Shutdown();
+		Shutdown();
 	}
 
-	void WindowsWindow::Init(const WindowProps& props)
+	void WindowsWindow::Init()
 	{
 		HZ_PROFILE_FUNCTION();
 		
-		m_Data.Title = props.Title;
-		m_Data.Width = props.Width;
-		m_Data.Height = props.Height;
+		m_Data.Title = m_Specification.Title;
+		m_Data.Width = m_Specification.Width;
+		m_Data.Height = m_Specification.Height;
 
-		HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		HZ_CORE_INFO("Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 
 		if (g_GLFWWindowCount == 0)
 		{
@@ -50,6 +53,12 @@ namespace Hazel
 			int32_t success = glfwInit();
 			HZ_CORE_ASSERT(success, "Could not initialize GLFW!")
 			glfwSetErrorCallback(GlfwErrorCallback);
+		}
+
+		if (!m_Specification.Decorated)
+		{
+			// This removes title bar on all platforms
+			glfwWindowHint(GLFW_DECORATED, false);
 		}
 
 		{
@@ -66,7 +75,6 @@ namespace Hazel
 		m_Context->Init();
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int32_t width, int32_t height)
@@ -76,6 +84,13 @@ namespace Hazel
 			data.Height = height;
 
 			WindowResizeEvent event(width, height);
+			data.EventCallback(event);
+		});
+
+		glfwSetWindowFocusCallback(m_Window, [](GLFWwindow* window, int32_t focused)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowFocusEvent event((bool)focused);
 			data.EventCallback(event);
 		});
 
@@ -160,27 +175,17 @@ namespace Hazel
 
 	void WindowsWindow::CreateGlfwWindow()
 	{
-		int32_t count;
-		int32_t monitorX, monitorY;
+		if (m_Specification.Fullscreen)
+		{
+			GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+			m_Window = glfwCreateWindow(mode->width, mode->height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
+		else
+		{
+			m_Window = glfwCreateWindow((int32_t)m_Data.Width, (int32_t)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
 
-		// Get the monitor viewport and the video mode spec
-		GLFWmonitor** monitors = glfwGetMonitors(&count);
-		glfwGetMonitorPos(monitors[0], &monitorX, &monitorY);
-		const GLFWvidmode* videoMode = glfwGetVideoMode(monitors[0]);
-
-		// Set the visibility hint to to false for the window creation
-		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-		// Create the glfw window
-		m_Window = glfwCreateWindow((int32_t)m_Data.Width, (int32_t)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
-
-		// Set its position to be centered based on the width and height of the monitor
-		glfwSetWindowPos(m_Window, 
-			monitorX + (int32_t)((videoMode->width - m_Data.Width) / 2), 
-			monitorY + (int32_t)((videoMode->height - m_Data.Height )/ 2));
-
-
-		// Finally show the window and increase the window count
 		glfwShowWindow(m_Window);
 		g_GLFWWindowCount++;
 	}
@@ -205,6 +210,19 @@ namespace Hazel
 		m_Context->SwapBuffers();
 	}
 
+	void WindowsWindow::Maximize()
+	{
+		glfwMaximizeWindow(m_Window);
+	}
+
+	void WindowsWindow::CenterWindow()
+	{
+		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		int32_t x = (int32_t)(mode->width / 2 - m_Data.Width / 2);
+		int32_t y = (int32_t)(mode->height / 2 - m_Data.Height / 2);
+		glfwSetWindowPos(m_Window, x, y);
+	}
+
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -220,5 +238,10 @@ namespace Hazel
 	bool WindowsWindow::IsVSync() const
 	{
 		return m_Data.VSync;
+	}
+
+	void WindowsWindow::SetResizable(bool resizable) const
+	{
+		glfwSetWindowAttrib(m_Window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
 	}
 }

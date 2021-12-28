@@ -5,7 +5,7 @@
 
 namespace Hazel
 {
-	class FileDialogs
+	class FileDialog
 	{
 	public:
 		static std::optional<std::string> OpenFile(const char* filter);

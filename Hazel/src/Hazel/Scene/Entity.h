@@ -51,6 +51,9 @@ namespace Hazel
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
+		TransformComponent& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle).GetTransform(); }
+
 		UUID GetUUID() { return GetComponent<IdComponent>().Id; }
 		const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
 
@@ -71,5 +74,8 @@ namespace Hazel
 	private:
 		entt::entity m_EntityHandle = entt::null;
 		Scene* m_Scene = nullptr;
+
+		friend class Scene;
+		friend class ScriptingEngine;
 	};
 }

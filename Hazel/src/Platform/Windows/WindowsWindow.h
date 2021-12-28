@@ -11,7 +11,7 @@ namespace Hazel
 	class WindowsWindow : public Window
 	{
 	public:
-		WindowsWindow(const WindowProps& props);
+		WindowsWindow(const WindowSpecification& props);
 		virtual ~WindowsWindow();
 
 		void OnUpdate() override;
@@ -19,17 +19,22 @@ namespace Hazel
 		uint32_t GetWidth() const override { return m_Data.Width; }
 		uint32_t GetHeight() const override { return m_Data.Height; }
 
+		void Maximize() override;
+		void CenterWindow() override;
+
 		void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+		void SetResizable(bool resizable) const override;
 
 		void* GetNativeWindow() const override { return m_Window; }
 	private:
-		void Init(const WindowProps& props);
+		void Init();
 		void CreateGlfwWindow();
 		void Shutdown();
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_Window = nullptr;
+		WindowSpecification m_Specification;
 		Scope<GraphicsContext> m_Context;
 
 		struct WindowData

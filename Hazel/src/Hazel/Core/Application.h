@@ -13,22 +13,23 @@ int main(int argc, char** argv);
 
 namespace Hazel
 {
-	struct ApplicationCommandLineArgs
+	struct ApplicationSpecification
 	{
-		int32_t Count = 0;
-		char** Args = nullptr;
-
-		const char* operator[](int32_t index) const
-		{
-			HZ_CORE_ASSERT(index < Count);
-			return Args[index];
-		}
+		std::string Name = "Hazel";
+		uint32_t WindowWidth = 1600, WindowHeight = 900;
+		bool WindowDecorated = false;
+		bool Fullscreen = false;
+		bool VSync = true;
+		std::string WorkingDirectory;
+		bool StartMaximized = true;
+		bool Resizable = true;
+		bool EnableImGui = true;
 	};
 
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Hazel App", ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
+		Application(const ApplicationSpecification& specification);
 		virtual ~Application();
 
 		void OnEvent(Event& e);
@@ -36,13 +37,11 @@ namespace Hazel
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 
-		Window& GetWindow() const { return *m_Window; }
-
 		void Close();
 
+		Window& GetWindow() const { return *m_Window; }
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
-
-		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 
 		static Application& Get() { return *s_Instance; }
 	
@@ -52,7 +51,7 @@ namespace Hazel
 		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:
-		ApplicationCommandLineArgs m_CommandLineArgs;
+		ApplicationSpecification m_Specification;
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
@@ -66,5 +65,5 @@ namespace Hazel
 	};
 
 	// To be defined in client
-	Application* CreateApplication(ApplicationCommandLineArgs args);
+	Application* CreateApplication(int argc, char** argv);
 }

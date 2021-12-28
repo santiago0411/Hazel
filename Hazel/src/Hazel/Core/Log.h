@@ -18,10 +18,12 @@ namespace Hazel
 
 		static Ref<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
 		static Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+		static Ref<spdlog::logger>& GetScriptLogger() { return s_ScriptLogger; }
 
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
 		static Ref<spdlog::logger> s_ClientLogger;
+		static Ref<spdlog::logger> s_ScriptLogger;
 	};
 }
 
@@ -56,3 +58,10 @@ OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
 #define HZ_WARN(...)			::Hazel::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define HZ_ERROR(...)			::Hazel::Log::GetClientLogger()->error(__VA_ARGS__)
 #define HZ_CRITICAL(...)		::Hazel::Log::GetClientLogger()->critical(__VA_ARGS__)
+
+// Script log macros
+#define HZ_SCRIPT_TRACE(...)	::Hazel::Log::GetScriptLogger()->trace(__VA_ARGS__)
+#define HZ_SCRIPT_INFO(...)		::Hazel::Log::GetScriptLogger()->info(__VA_ARGS__)
+#define HZ_SCRIPT_WARN(...)		::Hazel::Log::GetScriptLogger()->warn(__VA_ARGS__)
+#define HZ_SCRIPT_ERROR(...)	::Hazel::Log::GetScriptLogger()->error(__VA_ARGS__)
+#define HZ_SCRIPT_CRITICAL(...)	::Hazel::Log::GetScriptLogger()->critical(__VA_ARGS__)

@@ -4,6 +4,8 @@
 #include "Hazel/Core/Log.h"
 #include <filesystem>
 
+#define HZ_ENABLE_VERIFY
+
 #ifdef HZ_ENABLE_ASSERTS
 
 // Alternatively we could use the same "default" message for both "WITH_MSG" and "NO_MSG" and
@@ -21,4 +23,18 @@
 #else
 #define HZ_ASSERT(...)
 #define HZ_CORE_ASSERT(...)
+#endif
+
+#ifdef HZ_ENABLE_VERIFY
+#define HZ_VERIFY_NO_MESSAGE(condition) { if(!(condition)) { HZ_ERROR("Verify Failed"); __debugbreak(); } }
+#define HZ_VERIFY_MESSAGE(condition, ...) { if(!(condition)) { HZ_ERROR("Verify Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+
+#define HZ_VERIFY_RESOLVE(arg1, arg2, macro, ...) macro
+#define HZ_GET_VERIFY_MACRO(...) HZ_EXPAND_VARGS(HZ_VERIFY_RESOLVE(__VA_ARGS__, HZ_VERIFY_MESSAGE, HZ_VERIFY_NO_MESSAGE))
+
+#define HZ_VERIFY(...) HZ_EXPAND_VARGS( HZ_GET_VERIFY_MACRO(__VA_ARGS__)(__VA_ARGS__) )
+#define HZ_CORE_VERIFY(...) HZ_EXPAND_VARGS( HZ_GET_VERIFY_MACRO(__VA_ARGS__)(__VA_ARGS__) )
+#else
+#define HZ_VERIFY(...)
+#define HZ_CORE_VERIFY(...)
 #endif

@@ -12,6 +12,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Hazel/Scripting/ScriptModuleField.h"
+
 namespace Hazel
 {
 	// For internal use
@@ -53,6 +55,17 @@ namespace Hazel
 				* rotation
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
+	};
+
+	struct ScriptComponent
+	{
+		std::string ModuleName;
+		ScriptModuleFieldMap ModuleFieldMap;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent& other) = default;
+		ScriptComponent(const std::string& moduleName)
+			: ModuleName(moduleName) {}
 	};
 
 	struct SpriteRendererComponent
@@ -159,6 +172,7 @@ namespace Hazel
 	using AllComponents = ComponentGroup
 	<
 		TransformComponent,
+		ScriptComponent,
 		SpriteRendererComponent,
 		CircleRendererComponent,
 		CameraComponent,

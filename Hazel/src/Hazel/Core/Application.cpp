@@ -3,6 +3,8 @@
 
 #include "Hazel/Renderer/Renderer.h"
 
+#include "Hazel/Scripting/ScriptingEngine.h"
+
 #include <GLFW/glfw3.h>
 
 #include <ranges>
@@ -11,22 +13,39 @@ namespace Hazel
 {
 	Application* Application::s_Instance = nullptr;
 	
-	Application::Application(const std::string& name, ApplicationCommandLineArgs args)
-		: m_CommandLineArgs(args)
+	Application::Application(const ApplicationSpecification& specification)
+		: m_Specification(specification)
 	{
 		HZ_PROFILE_FUNCTION();
 		
 		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		
-		m_Window = Window::Create(WindowProps{name, 1600, 900});
+
+		WindowSpecification windowSpec;
+		windowSpec.Title = specification.Name;
+		windowSpec.Width = specification.WindowWidth;
+		windowSpec.Height = specification.WindowHeight;
+		windowSpec.Decorated = specification.WindowDecorated;
+		windowSpec.Fullscreen = specification.Fullscreen;
+		windowSpec.VSync = specification.VSync;
+
+		m_Window = Window::Create(windowSpec);
 		m_Window->SetEventCallback(HZ_BIND_EVENT_FN(Application::OnEvent));
+		if (specification.StartMaximized)
+			m_Window->Maximize();
+		else
+			m_Window->CenterWindow();
+		m_Window->SetResizable(specification.Resizable);
 		m_Window->SetVSync(false);
 
 		Renderer::Init();
 		
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+		ScriptingEngine::Init("Resources/Scripts/Hazel-ScriptCore.dll");
+		ScriptingEngine::RunStaticMethod("Tests:PrintAllLogs()");
+		ScriptingEngine::Test();
 	}
 
 	Application::~Application()
@@ -34,6 +53,7 @@ namespace Hazel
 		HZ_PROFILE_FUNCTION();
 		
 		Renderer::Shutdown();
+		ScriptingEngine::Shutdown();
 	}
 
 	void Application::Run()
@@ -100,11 +120,11 @@ namespace Hazel
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
 
-		for (const auto& layer : std::ranges::reverse_view(m_LayerStack))
+		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
 		{
+			(*--it)->OnEvent(e);
 			if (e.Handled)
 				break;
-			layer->OnEvent(e);
 		}
 	}
 

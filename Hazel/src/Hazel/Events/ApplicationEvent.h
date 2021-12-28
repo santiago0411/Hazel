@@ -2,8 +2,8 @@
 
 #include "Hazel/Events/Event.h"
 
-namespace Hazel {
-
+namespace Hazel
+{
 	class WindowResizeEvent : public Event
 	{
 	public:
@@ -24,6 +24,21 @@ namespace Hazel {
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	private:
 		uint32_t m_Width, m_Height;
+	};
+
+	class WindowFocusEvent : public Event
+	{
+	public:
+		WindowFocusEvent(bool focused)
+			: m_Focused(focused) {}
+
+		bool IsFocused() const { return m_Focused; }
+
+		EVENT_CLASS_TYPE(WindowFocus)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+
+	private:
+		bool m_Focused;
 	};
 
 	class WindowCloseEvent : public Event

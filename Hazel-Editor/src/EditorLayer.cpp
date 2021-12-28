@@ -15,9 +15,12 @@ namespace Hazel
 {
 	extern const std::filesystem::path g_AssetsPath;
 
-	EditorLayer::EditorLayer()
+	static std::string_view s_ScenePath;
+
+	EditorLayer::EditorLayer(std::string_view scenePath)
 		: Layer("EditorLayer")
 	{
+		s_ScenePath = scenePath;
 	}
 
 	void EditorLayer::OnAttach()
@@ -36,13 +39,11 @@ namespace Hazel
 		m_EditorScene = CreateRef<Scene>();
 		m_ActiveScene = m_EditorScene;
 
-		auto commandLineArgs = Application::Get().GetCommandLineArgs();
-		if (commandLineArgs.Count > 1)
+		if (!s_ScenePath.empty())
 		{
-			auto sceneFilePath = commandLineArgs[1];
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Deserialize(sceneFilePath);
-			m_ActiveScenePath = sceneFilePath;
+			if (serializer.Deserialize(s_ScenePath.data()))
+				m_ActiveScenePath = s_ScenePath.data();
 		}
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
@@ -468,7 +469,7 @@ namespace Hazel
 
 	void EditorLayer::OpenScene()
 	{
-		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
+		const std::optional<std::string> filepath = FileDialog::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
 		if (filepath)
 			OpenScene(*filepath);
 	}
@@ -506,7 +507,7 @@ namespace Hazel
 
 	void EditorLayer::SaveSceneAs()
 	{
-		const std::optional<std::string> filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
+		const std::optional<std::string> filepath = FileDialog::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
 		if (filepath)
 		{
 			SerializeScene(*filepath);

@@ -1,0 +1,6 @@
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Intermediates\Debug\Hazel-ScriptCore.csproj.AssemblyReference.cache
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Intermediates\Debug\Hazel-ScriptCore.csproj.CoreCompileInputs.cache
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Intermediates\Debug\Hazel-ScriptCore.dll
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Intermediates\Debug\Hazel-ScriptCore.pdb
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Hazel-ScriptCore.dll
+D:\Coding\CPP\GameEngine\Hazel-Exp\Hazel-Editor\Resources\Scripts\Hazel-ScriptCore.pdb

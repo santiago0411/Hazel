@@ -31,6 +31,9 @@
 	#endif
 #endif
 
+// __VA_ARGS__ expansion to get past MSVC "bug"
+#define HZ_EXPAND_VARGS(x) x
+
 #define HZ_EXPAND_MACRO(x) x
 #define HZ_STRINGIFY_MACRO(x) #x
 

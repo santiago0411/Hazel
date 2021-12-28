@@ -33,6 +33,13 @@ group "Dependencies"
 	include "Hazel/vendor/Box2D"
 group ""
 
-include "Hazel"
-include "Sandbox"
-include "Hazel-Editor"
+
+group "Core"
+	include "Hazel"
+	include "Hazel-ScriptCore"
+group ""
+
+group "Tools"
+	include "Sandbox"
+	include "Hazel-Editor"
+group ""

@@ -9,7 +9,7 @@ namespace Hazel
 	class EditorLayer : public Layer
 	{
 	public:
-		EditorLayer();
+		EditorLayer(std::string_view scenePath);
 		~EditorLayer() override = default;
 
 		void OnAttach() override;

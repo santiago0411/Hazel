@@ -38,7 +38,8 @@ project "Hazel-Editor"
 
 		postbuildcommands
 		{
-			"{COPYDIR} \"%{LibraryDir.VulkanSDK_DebugDLL}\" \"%{cfg.targetdir}\""
+			"{COPYDIR} \"%{LibraryDir.VulkanSDK_DebugDLL}\" \"%{cfg.targetdir}\"",
+			"{COPY} \"%{LibraryDir.mono}/../bin/Debug/mono-2.0-sgen.dll\" \"%{cfg.targetdir}\""
 		}
 
 	filter "configurations:Release"
@@ -46,7 +47,17 @@ project "Hazel-Editor"
 		runtime "Release"
 		optimize "on"
 
+		postbuildcommands
+		{
+			"{COPY} \"%{LibraryDir.mono}/../bin/Release/mono-2.0-sgen.dll\" \"%{cfg.targetdir}\""
+		}
+
 	filter "configurations:Dist"
 		defines "HZ_DIST"
 		runtime "Release"
 		optimize "on"
+
+		postbuildcommands
+		{
+			"{COPY} \"%{LibraryDir.mono}/../bin/Release/mono-2.0-sgen.dll\" \"%{cfg.targetdir}\""
+		}

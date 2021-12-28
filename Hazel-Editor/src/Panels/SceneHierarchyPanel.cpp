@@ -230,7 +230,7 @@ namespace Hazel
 			TryListComponent<CameraComponent>(m_SelectionContext, "Camera");
 			TryListComponent<SpriteRendererComponent>(m_SelectionContext, "Sprite Renderer");
 			TryListComponent<CircleRendererComponent>(m_SelectionContext, "Circle Renderer");
-			TryListComponent<RigidBody2DComponent>(m_SelectionContext, "Rigidbody 2D");
+			TryListComponent<RigidBody2DComponent>(m_SelectionContext, "RigidBody 2D");
 			TryListComponent<BoxCollider2DComponent>(m_SelectionContext, "Box Collider 2D");
 			TryListComponent<CircleCollider2DComponent>(m_SelectionContext, "Circle Collider 2D");
 			ImGui::EndPopup();

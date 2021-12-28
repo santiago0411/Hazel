@@ -1,7 +1,7 @@
 project "Hazel"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++20"
+	cppdialect "C++17"
 	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
@@ -42,6 +42,7 @@ project "Hazel"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.mono}"
 	}
 
 	links
@@ -51,7 +52,8 @@ project "Hazel"
 		"ImGui",
 		"yaml-cpp",
 		"opengl32.lib",
-		"Box2D"
+		"Box2D",
+		"%{Library.mono}"
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

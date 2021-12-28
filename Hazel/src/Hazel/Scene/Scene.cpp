@@ -5,6 +5,8 @@
 #include "Hazel/Scene/ScriptableEntity.h"
 #include "Hazel/Scene/Components.h"
 
+#include "Hazel/Math/Math.h"
+
 #include "Hazel/Renderer/Renderer2D.h"
 
 #include <box2d/b2_world.h>
@@ -113,6 +115,9 @@ namespace Hazel
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
+
+		HZ_CORE_ASSERT(m_EntityIdMap.find(uuid) == m_EntityIdMap.end());
+		m_EntityIdMap[uuid] = entity;
 		return entity;
 	}
 
@@ -122,9 +127,15 @@ namespace Hazel
 		CopyAllExistingComponents(newEntity, entity);
 	}
 
+	void Scene::SubmitToDestroyEntity(Entity entity)
+	{
+		SubmitPostUpdateFunc([entity]() { entity.m_Scene->DestroyEntity(entity); });
+	}
+
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		m_EntityIdMap.erase(entity.GetUUID());
 	}
 
 	void Scene::OnRuntimeStart()
@@ -213,10 +224,14 @@ namespace Hazel
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		// Update scripts
-		m_Registry.view<NativeScriptComponent>().each([=, this](NativeScriptComponent& nsc)
+		m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
 		{
 			nsc.Instance->OnUpdate(ts);
 		});
+
+		for (auto&& fn : m_PostUpdateQueue)
+			fn();
+		m_PostUpdateQueue.clear();
 
 		// Physics
 		{
@@ -299,6 +314,63 @@ namespace Hazel
 		return {};
 	}
 
+	Entity Scene::FindEntityByTag(const std::string& tag)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		const auto view = m_Registry.view<TagComponent>();
+		for (const EntityId entityId : view)
+		{
+			const auto& candidate = view.get<TagComponent>(entityId).Tag;
+			if (candidate == tag)
+				return { entityId, this };
+		}
+
+		return Entity{};
+	}
+
+	Entity Scene::FindEntityByUuid(UUID id)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		const auto view = m_Registry.view<IdComponent>();
+		for (const EntityId entityId : view)
+		{
+			const auto& idComponent = view.get<IdComponent>(entityId);
+			if (idComponent.Id == id)
+				return { entityId, this };
+		}
+
+		return Entity{};
+	}
+
+	void Scene::ConvertToLocalSpace(Entity entity)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		
+	}
+
+	void Scene::ConvertToWorldSpace(Entity entity)
+	{
+	}
+
+	glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
+	{
+		glm::mat4 transform(1.0f);
+		return transform * entity.Transform().GetTransform();
+	}
+
+	TransformComponent Scene::GetWorldSpaceTransform(Entity entity)
+	{
+		HZ_PROFILE_FUNCTION();
+
+		glm::mat4 transform = GetWorldSpaceTransformMatrix(entity);
+		TransformComponent transformComponent;
+		Math::DecomposeTransform(transform, transformComponent.Position, transformComponent.Rotation, transformComponent.Scale);
+		return transformComponent;
+	}
+
 	template <typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
@@ -317,6 +389,11 @@ namespace Hazel
 
 	template<>
 	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
 	{
 	}
 
