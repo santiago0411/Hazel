@@ -20,7 +20,7 @@ subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
 if premakeInstalled:
     if platform.system() == "Windows":
         print("\nRunning premake...")
-        subprocess.call(["vendor/premake/bin/premake5.exe", "vs2019"])
+        subprocess.call(["vendor/premake/bin/premake5.exe", "vs2022"])
 
     print("\nSetup completed!")
 else:
