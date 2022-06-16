@@ -34,7 +34,9 @@ namespace Hazel
 		int32_t GetMouseOverPixelData() const;
 
 		void OnScenePlay();
+		void OnSceneSimulate();
 		void OnSceneStop();
+
 
 		void DuplicateSelectedEntity();
 
@@ -42,7 +44,7 @@ namespace Hazel
 	private:
 		Ref<Framebuffer> m_Framebuffer;
 		Ref<Scene> m_ActiveScene;
-		Ref<Scene> m_EditorScene, m_RuntimeScene;
+		Ref<Scene> m_EditorScene;
 		std::filesystem::path m_ActiveScenePath;
 		EditorCamera m_EditorCamera;
 
@@ -61,11 +63,11 @@ namespace Hazel
 		// Editor resources
 		enum class SceneState
 		{
-			Edit = 0, Play = 1
+			Edit = 0, Play = 1, Simulate = 2
 		};
 
 		SceneState m_SceneState = SceneState::Edit;
 
-		Ref<Texture2D> m_IconPlay, m_IconStop;
+		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
 	};
 }

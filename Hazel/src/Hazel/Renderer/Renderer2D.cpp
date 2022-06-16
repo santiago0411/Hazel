@@ -161,7 +161,7 @@ namespace Hazel
 					{ ShaderDataType::Float,	"a_Thickness"		},
 					{ ShaderDataType::Float,	"a_Fade"			},
 					{ ShaderDataType::Float4,	"a_Color"			},
-					{ ShaderDataType::Int,		"a_EntityId"		}
+					{ ShaderDataType::Int,	"a_EntityId"		}
 				});
 			s_Data->CircleVertexArray->AddVertexBuffer(s_Data->CircleVertexBuffer);
 
@@ -178,7 +178,7 @@ namespace Hazel
 				{
 					{ ShaderDataType::Float3,	"a_Position"	},
 					{ ShaderDataType::Float4,	"a_Color"		},
-					{ ShaderDataType::Int,		"a_EntityId"	}
+					{ ShaderDataType::Int,	"a_EntityId"	}
 				});
 			s_Data->LineVertexArray->AddVertexBuffer(s_Data->LineVertexBuffer);
 

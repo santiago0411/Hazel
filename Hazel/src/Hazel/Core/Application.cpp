@@ -16,7 +16,7 @@ namespace Hazel
 	{
 		HZ_PROFILE_FUNCTION();
 		
-		HZ_CORE_ASSERT(!s_Instance, "Application already exists!");
+		HZ_CORE_ASSERT(!s_Instance, "Application already exists!")
 		s_Instance = this;
 		
 		m_Window = Window::Create(WindowProps{name, 1600, 900});
@@ -44,7 +44,7 @@ namespace Hazel
 		{
 			HZ_PROFILE_SCOPE("RunLoop");
 			
-			const float time = (float)glfwGetTime();
+			const auto time = (float)glfwGetTime();
 			const Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 

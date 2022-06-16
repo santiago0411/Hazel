@@ -75,6 +75,11 @@ namespace Hazel
 		CopyComponentIfExists(AllComponents{}, dst, src);
 	}
 
+	Scene::~Scene()
+	{
+		delete m_PhysicsWorld;
+	}
+
 	Ref<Scene> Scene::Copy(const Ref<Scene>& scene)
 	{
 		auto newScene = CreateRef<Scene>();
@@ -129,85 +134,51 @@ namespace Hazel
 
 	void Scene::OnRuntimeStart()
 	{
-		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
-
-		m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
-		{
-			Entity entity = { entityId, this };
-			auto& transform = entity.GetComponent<TransformComponent>();
-
-			b2BodyDef bodyDef;
-			bodyDef.type = RigidBody2DTypeToBox2DBody(rbc.Type);
-			bodyDef.position.Set(transform.Position.x, transform.Position.y);
-			bodyDef.angle = transform.Rotation.z;
-
-			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
-			body->SetFixedRotation(rbc.FixedRotation);
-			rbc.RuntimeBody = body;
-
-			if (entity.HasComponent<BoxCollider2DComponent>())
-			{
-				auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
-
-				b2PolygonShape boxShape;
-				boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y);
-
-				b2FixtureDef fixtureDef;
-				fixtureDef.shape = &boxShape;
-				fixtureDef.density = bc2d.Density;
-				fixtureDef.friction = bc2d.Friction;
-				fixtureDef.restitution = bc2d.Restitution;
-				fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-				body->CreateFixture(&fixtureDef);
-			}
-
-			if (entity.HasComponent<CircleCollider2DComponent>())
-			{
-				auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
-
-				b2CircleShape circleShape;
-				circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
-				circleShape.m_radius = transform.Scale.x * cc2d.Radius;
-
-				b2FixtureDef fixtureDef;
-				fixtureDef.shape = &circleShape;
-				fixtureDef.density = cc2d.Density;
-				fixtureDef.friction = cc2d.Friction;
-				fixtureDef.restitution = cc2d.Restitution;
-				fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-				body->CreateFixture(&fixtureDef);
-			}
-		});
-
-		m_Registry.view<NativeScriptComponent>().each([this](EntityId entityId, NativeScriptComponent& nsc)
-		{
-			nsc.Instance = nsc.InstantiateScript();
-			nsc.Instance->m_Entity = Entity{ entityId, this };
-			nsc.Instance->OnCreate();
-		});
+		InitPhysics2D();
 	}
 
 	void Scene::OnRuntimeStop()
 	{
-		delete m_PhysicsWorld;
-		m_PhysicsWorld = nullptr;
+		StopPhysics2D();
+	}
+
+	void Scene::OnSimulationStart()
+	{
+		InitPhysics2D();
+	}
+
+	void Scene::OnSimulationStop()
+	{
+		StopPhysics2D();
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts, const EditorCamera& camera)
 	{
-		Renderer2D::BeginScene(camera);
+		RenderScene(camera);
+	}
 
-		m_Registry.group<TransformComponent, SpriteRendererComponent>().each([](EntityId entityId, TransformComponent& tc, SpriteRendererComponent& src)
+	void Scene::OnUpdateSimulation(Timestep ts, const EditorCamera& camera)
+	{
+		// Physics
 		{
-			Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
-		});
+			constexpr int32_t velocityIterations = 6;
+			constexpr int32_t positionIterations = 2;
+			m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
-		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
-		{
-			Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
-		});
+			m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
+				{
+					Entity entity = { entityId, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
 
-		Renderer2D::EndScene();
+					const auto* body = static_cast<b2Body*>(rbc.RuntimeBody);
+					const auto& position = body->GetPosition();
+					transform.Position.x = position.x;
+					transform.Position.y = position.y;
+					transform.Rotation.z = body->GetAngle();
+				});
+		}
+
+		RenderScene(camera);
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -297,6 +268,89 @@ namespace Hazel
 		}
 
 		return {};
+	}
+
+	void Scene::InitPhysics2D()
+	{
+		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
+
+		m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
+			{
+				Entity entity = { entityId, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+
+				b2BodyDef bodyDef;
+				bodyDef.type = RigidBody2DTypeToBox2DBody(rbc.Type);
+				bodyDef.position.Set(transform.Position.x, transform.Position.y);
+				bodyDef.angle = transform.Rotation.z;
+
+				b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+				body->SetFixedRotation(rbc.FixedRotation);
+				rbc.RuntimeBody = body;
+
+				if (entity.HasComponent<BoxCollider2DComponent>())
+				{
+					auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+
+					b2PolygonShape boxShape;
+					boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y);
+
+					b2FixtureDef fixtureDef;
+					fixtureDef.shape = &boxShape;
+					fixtureDef.density = bc2d.Density;
+					fixtureDef.friction = bc2d.Friction;
+					fixtureDef.restitution = bc2d.Restitution;
+					fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+					body->CreateFixture(&fixtureDef);
+				}
+
+				if (entity.HasComponent<CircleCollider2DComponent>())
+				{
+					auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+					b2CircleShape circleShape;
+					circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
+					circleShape.m_radius = transform.Scale.x * cc2d.Radius;
+
+					b2FixtureDef fixtureDef;
+					fixtureDef.shape = &circleShape;
+					fixtureDef.density = cc2d.Density;
+					fixtureDef.friction = cc2d.Friction;
+					fixtureDef.restitution = cc2d.Restitution;
+					fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+					body->CreateFixture(&fixtureDef);
+				}
+			});
+
+		m_Registry.view<NativeScriptComponent>().each([this](EntityId entityId, NativeScriptComponent& nsc)
+			{
+				nsc.Instance = nsc.InstantiateScript();
+				nsc.Instance->m_Entity = Entity{ entityId, this };
+				nsc.Instance->OnCreate();
+			});
+	}
+
+	void Scene::StopPhysics2D()
+	{
+		delete m_PhysicsWorld;
+		m_PhysicsWorld = nullptr;
+	}
+
+	void Scene::RenderScene(const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+
+		m_Registry.group<TransformComponent, SpriteRendererComponent>().each([](EntityId entityId, TransformComponent& tc, SpriteRendererComponent& src)
+			{
+				Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
+			});
+
+		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
+			{
+				Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
+			});
+
+		Renderer2D::EndScene();
 	}
 
 	template <typename T>
