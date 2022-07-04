@@ -8,8 +8,8 @@
 class HazelEditor : public Hazel::Application
 {
 public:
-	HazelEditor(Hazel::ApplicationCommandLineArgs args)
-		: Application("Sandbox", args)
+	HazelEditor(const Hazel::ApplicationSpecification& specification)
+		: Application(specification)
 	{
 		PushLayer(new Sandbox2D());
 	}
@@ -19,5 +19,10 @@ public:
 
 Hazel::Application* Hazel::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new HazelEditor(args);
+	ApplicationSpecification spec;
+	spec.Name = "Sandbox";
+	spec.WorkingDirectory = "../Hazel-Editor";
+	spec.CommandLineArgs = args;
+
+	return new HazelEditor(spec);
 }

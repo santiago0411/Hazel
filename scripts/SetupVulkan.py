@@ -9,7 +9,8 @@ from io import BytesIO
 from urllib.request import urlopen
 
 class VulkanConfiguration:
-    requiredVulkanVersion = "1.3.216.0"
+    requiredVulkanVersion = "1.3.216.44"
+    installVulkanVersion = "1.3.216.0"
     vulkanDirectory = "./Hazel/vendor/VulkanSDK"
 
     @classmethod
@@ -44,16 +45,17 @@ class VulkanConfiguration:
     def __InstallVulkanSDK(cls):
         permissionGranted = False
         while not permissionGranted:
-            reply = str(input("Would you like to install VulkanSDK {0:s}? [Y/N]: ".format(cls.requiredVulkanVersion))).lower().strip()[:1]
+            reply = str(input("Would you like to install VulkanSDK {0:s}? [Y/N]: ".format(cls.installVulkanVersion))).lower().strip()[:1]
             if reply == 'n':
                 return
             permissionGranted = (reply == 'y')
 
-        vulkanInstallURL = f"https://sdk.lunarg.com/sdk/download/{cls.requiredVulkanVersion}/windows/VulkanSDK-{cls.requiredVulkanVersion}-Installer.exe"
-        vulkanPath = f"{cls.vulkanDirectory}/VulkanSDK-{cls.requiredVulkanVersion}-Installer.exe"
+        vulkanInstallURL = f"https://sdk.lunarg.com/sdk/download/{cls.installVulkanVersion}/windows/VulkanSDK-{cls.installVulkanVersion}-Installer.exe"
+        vulkanPath = f"{cls.vulkanDirectory}/VulkanSDK-{cls.installVulkanVersion}-Installer.exe"
         print("Downloading {0:s} to {1:s}".format(vulkanInstallURL, vulkanPath))
         Utils.DownloadFile(vulkanInstallURL, vulkanPath)
         print("Running Vulkan SDK installer...")
+        print("Make sure during installation to select 'Debuggable Shader API Libraries - 64 bit' if you wish to run Hazel in Debug mode.")
         os.startfile(os.path.abspath(vulkanPath))
         print("Re-run this script after installation!")
         quit()

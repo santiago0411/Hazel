@@ -37,7 +37,7 @@ namespace Hazel
 		m_EditorScene = CreateRef<Scene>();
 		m_ActiveScene = m_EditorScene;
 
-		auto commandLineArgs = Application::Get().GetCommandLineArgs();
+		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
 		if (commandLineArgs.Count > 1)
 		{
 			auto sceneFilePath = commandLineArgs[1];
@@ -48,6 +48,8 @@ namespace Hazel
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		Renderer2D::SetLineWidth(3.0f);
 	}
 
 	void EditorLayer::OnDetach()
@@ -479,6 +481,12 @@ namespace Hazel
 
 					Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.015f);
 				});
+		}
+
+		if(auto selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
+		{
+			const auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			Renderer2D::DrawRect(tc.GetTransform(), glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 		}
 
 		Renderer2D::EndScene();
