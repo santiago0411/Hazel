@@ -1,14 +1,5 @@
 Scene: Untitled
 Entities:
-  - Entity: 1366545474617171968
-    TagComponent:
-      Tag: Square
-    TransformComponent:
-      Position: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0, 1, 0, 1]
   - Entity: 7459096436292221725
     TagComponent:
       Tag: Camera
@@ -27,3 +18,14 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
+  - Entity: 1366545474617171968
+    TagComponent:
+      Tag: Square
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.999989986, 1, 0.999989986, 1]
+      TexturePath: assets\textures\Checkerboard.png
+      TilingFactor: 2

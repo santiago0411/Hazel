@@ -17,6 +17,8 @@ namespace Hazel
 		uint32_t GetHeight() const override { return m_Height; }
 		uint32_t GetRendererId() const override { return m_RendererId; }
 
+		const std::string& GetPath() const override { return m_Path; }
+
 		void SetData(void* data, uint32_t size) override;
 		
 		void Bind(uint32_t slot = 0) const override;

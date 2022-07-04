@@ -20,7 +20,7 @@ namespace Hazel
 
 		const char* operator[](int32_t index) const
 		{
-			HZ_CORE_ASSERT(index < Count);
+			HZ_CORE_ASSERT(index < Count)
 			return Args[index];
 		}
 	};

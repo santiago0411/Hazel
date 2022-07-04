@@ -24,6 +24,7 @@ namespace Hazel
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
+		: m_Path(path)
 	{
 		HZ_PROFILE_FUNCTION();
 		

@@ -42,14 +42,22 @@ namespace Hazel
 		{
 			auto sceneFilePath = commandLineArgs[1];
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Deserialize(sceneFilePath);
-			m_ActiveScenePath = sceneFilePath;
+			if (!serializer.Deserialize(sceneFilePath))
+			{
+				// Reset the Scene to an empty one if it fails to deserialize
+				m_EditorScene = CreateRef<Scene>();
+				m_ActiveScene = m_EditorScene;
+			}
+			else
+			{
+				m_ActiveScenePath = sceneFilePath;
+			}
 		}
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
-		Renderer2D::SetLineWidth(3.0f);
+		Renderer2D::SetLineWidth(4.0f);
 	}
 
 	void EditorLayer::OnDetach()
