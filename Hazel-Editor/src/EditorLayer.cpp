@@ -472,8 +472,9 @@ namespace Hazel
 
 					glm::mat4 transform = glm::translate(glm::mat4(1.0), position)
 						* glm::rotate(glm::mat4(1.0), tc.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
+						* glm::translate(glm::mat4(1.0), glm::vec3(bc2d.Offset, 0.001f))
 						* glm::scale(glm::mat4(1.0f), scale);
-
+					 
 					Renderer2D::DrawRect(transform, glm::vec4(0, 1, 0, 1));
 				});
 
@@ -485,13 +486,14 @@ namespace Hazel
 					glm::vec3 scale = tc.Scale * glm::vec3(cc2d.Radius * 2.0f);
 
 					glm::mat4 transform = glm::translate(glm::mat4(1.0), position)
+						* glm::translate(glm::mat4(1.0f), glm::vec3(cc2d.Offset, 0.001f))
 						* glm::scale(glm::mat4(1.0f), scale);
 
 					Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.015f);
 				});
 		}
 
-		if(auto selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
+		if (auto selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
 		{
 			const auto& tc = selectedEntity.GetComponent<TransformComponent>();
 			Renderer2D::DrawRect(tc.GetTransform(), glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));

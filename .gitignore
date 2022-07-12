@@ -20,3 +20,4 @@ Hazel/vendor/VulkanSDK
 Hazel-Editor/assets/cache
 Sandbox/assets/cache
 scripts/__pycache__
+Hazel-Editor/imgui.ini
