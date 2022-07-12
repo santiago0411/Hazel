@@ -2,10 +2,9 @@
 #include "Hazel/Core/Application.h"
 
 #include "Hazel/Renderer/Renderer.h"
+#include "Hazel/Scripting/ScriptEngine.h"
 
 #include <GLFW/glfw3.h>
-
-#include <ranges>
 
 namespace Hazel
 {
@@ -28,6 +27,7 @@ namespace Hazel
 		m_Window->SetVSync(false);
 
 		Renderer::Init();
+		ScriptEngine::Init();
 		
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
@@ -36,7 +36,8 @@ namespace Hazel
 	Application::~Application()
 	{
 		HZ_PROFILE_FUNCTION();
-		
+
+		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 
@@ -104,11 +105,11 @@ namespace Hazel
 		dispatcher.Dispatch<WindowCloseEvent>(HZ_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HZ_BIND_EVENT_FN(Application::OnWindowResize));
 
-		for (const auto& layer : std::ranges::reverse_view(m_LayerStack))
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled)
 				break;
-			layer->OnEvent(e);
+			(*it)->OnEvent(e);
 		}
 	}
 

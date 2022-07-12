@@ -184,7 +184,7 @@ namespace Hazel
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		// Update scripts
-		m_Registry.view<NativeScriptComponent>().each([=, this](NativeScriptComponent& nsc)
+		m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
 		{
 			nsc.Instance->OnUpdate(ts);
 		});
