@@ -91,6 +91,14 @@ namespace Hazel
 	};
 
 
+	struct ScriptComponent
+	{
+		std::string ClassName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent&) = default;
+	};
+
 	class ScriptableEntity;
 
 	struct NativeScriptComponent
@@ -162,6 +170,7 @@ namespace Hazel
 		SpriteRendererComponent,
 		CircleRendererComponent,
 		CameraComponent,
+		ScriptComponent,
 		NativeScriptComponent,
 		RigidBody2DComponent,
 		BoxCollider2DComponent,

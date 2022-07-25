@@ -3,6 +3,7 @@
 #include <filesystem>
 
 extern "C" {
+	typedef struct _MonoAssembly MonoAssembly;
 	typedef struct _MonoClass MonoClass;
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoMethod MonoMethod;
@@ -10,21 +11,10 @@ extern "C" {
 
 namespace Hazel
 {
-	class ScriptEngine
-	{
-	public:
-		static void Init();
-		static void Shutdown();
-
-		static void LoadAssembly(const std::filesystem::path& filepath);
-	private:
-		static void InitMono();
-		static void ShutdownMono();
-
-		static MonoObject* InstantiateClass(MonoClass* monoClass);
-
-		friend class ScriptClass;
-	};
+	class Scene;
+	class Entity;
+	class UUID;
+	class Timestep;
 
 	class ScriptClass
 	{
@@ -41,5 +31,49 @@ namespace Hazel
 		std::string m_ClassName;
 
 		MonoClass* m_MonoClass = nullptr;
+	};
+
+	class ScriptInstance
+	{
+	public:
+		ScriptInstance(const Ref<ScriptClass>& scriptClass, UUID entityId);
+
+		void InvokeOnCreate() const;
+		void InvokeOnUpdate(float ts) const;
+	private:
+		Ref<ScriptClass> m_ScriptClass;
+
+		MonoObject* m_Instance = nullptr;
+		MonoMethod* m_Constructor = nullptr;
+		MonoMethod* m_OnCreateMethod = nullptr;
+		MonoMethod* m_OnUpdateMethod = nullptr;
+	};
+
+	class ScriptEngine
+	{
+	public:
+		static void Init();
+		static void Shutdown();
+
+		static void LoadAssembly(const std::filesystem::path& filepath);
+
+		static bool EntityClassExists(const std::string& fullClassName);
+
+		static void OnRuntimeStart(Scene* scene);
+		static void OnRuntimeStop();
+
+		static void OnCreateEntity(Entity entity);
+		static void OnUpdateEntity(Entity entity, Timestep ts);
+
+		static Scene* GetSceneContext();
+
+	private:
+		static void InitMono();
+		static void ShutdownMono();
+
+		static MonoObject* InstantiateClass(MonoClass* monoClass);
+		static void LoadAssemblyClasses(MonoAssembly* assembly);
+
+		friend class ScriptClass;
 	};
 }

@@ -5,6 +5,8 @@
 #include "Hazel/Scene/ScriptableEntity.h"
 #include "Hazel/Scene/Components.h"
 
+#include "Hazel/Scripting/ScriptEngine.h"
+
 #include "Hazel/Renderer/Renderer2D.h"
 
 #include <box2d/b2_world.h>
@@ -15,8 +17,6 @@
 
 namespace Hazel
 {
-	using EntityId = entt::entity;
-
 	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
 	{
 		switch (bodyType)
@@ -75,6 +75,11 @@ namespace Hazel
 		CopyComponentIfExists(AllComponents{}, dst, src);
 	}
 
+	Scene::Scene()
+	{
+		m_Registry.on_construct<CameraComponent>().connect<&Scene::OnCameraComponentAdded>(this);
+	}
+
 	Scene::~Scene()
 	{
 		delete m_PhysicsWorld;
@@ -118,6 +123,7 @@ namespace Hazel
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
+		m_EntityMap[uuid] = entity;
 		return entity;
 	}
 
@@ -130,16 +136,30 @@ namespace Hazel
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		m_EntityMap.erase(entity.GetUUID());
 	}
 
 	void Scene::OnRuntimeStart()
 	{
 		InitPhysics2D();
+
+		// Scripting
+		{
+			ScriptEngine::OnRuntimeStart(this);
+
+			auto view = m_Registry.view<ScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity{ e, this };
+				ScriptEngine::OnCreateEntity(entity);
+			}
+		}
 	}
 
 	void Scene::OnRuntimeStop()
 	{
 		StopPhysics2D();
+		ScriptEngine::OnRuntimeStop();
 	}
 
 	void Scene::OnSimulationStart()
@@ -184,10 +204,19 @@ namespace Hazel
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		// Update scripts
-		m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
 		{
-			nsc.Instance->OnUpdate(ts);
-		});
+			auto view = m_Registry.view<ScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity{ e, this };
+				ScriptEngine::OnUpdateEntity(entity, ts);
+			}
+
+			m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
+			{
+				nsc.Instance->OnUpdate(ts);
+			});
+		}
 
 		// Physics
 		{
@@ -255,6 +284,12 @@ namespace Hazel
 			if (!cameraComponent.FixedAspectRatio)
 				cameraComponent.Camera.SetViewportSize(width, height);
 		});
+	}
+
+	Entity Scene::GetEntityByUUID(UUID id)
+	{
+		HZ_CORE_ASSERT(m_EntityMap.find(id) != m_EntityMap.end());
+		return { m_EntityMap.at(id), this };
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()
@@ -354,61 +389,10 @@ namespace Hazel
 		Renderer2D::EndScene();
 	}
 
-	template <typename T>
-	void Scene::OnComponentAdded(Entity entity, T& component)
+	void Scene::OnCameraComponentAdded(entt::registry& registry, entt::entity entity) const
 	{
-		//static_assert(false);
-	}
-
-	template<>
-	void Scene::OnComponentAdded<IdComponent>(Entity entity, IdComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
-	{
+		auto& component = registry.get<CameraComponent>(entity);
 		if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
 			component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
-	}
-
-	template<>
-	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<RigidBody2DComponent>(Entity entity, RigidBody2DComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
-	{
-	}
-
-	template<>
-	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
-	{
 	}
 }

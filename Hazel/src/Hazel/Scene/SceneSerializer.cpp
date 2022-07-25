@@ -193,6 +193,17 @@ namespace Hazel
 			out << YAML::EndMap; // CameraComponent
 		}
 
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap; // ScriptComponent
+
+			auto& sc = entity.GetComponent<ScriptComponent>();
+			out << YAML::Key << "ClassName" << YAML::Value << sc.ClassName;
+
+			out << YAML::EndMap; // ScriptComponent
+		}
+
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
 			out << YAML::Key << "SpriteRendererComponent";
@@ -356,13 +367,20 @@ namespace Hazel
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				}
 
+				if (auto scriptComponent = entity["ScriptComponent"])
+				{
+					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+					sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+				}
+
 				if (auto spriteRendererComponent = entity["SpriteRendererComponent"])
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 					if (spriteRendererComponent["TexturePath"])
 						src.Texture = Texture2D::Create(spriteRendererComponent["TexturePath"].as<std::string>());
-					src.TilingFactor = spriteRendererComponent["TilingFactor"].as<float>();
+					if (spriteRendererComponent["TilingFactor"])
+						src.TilingFactor = spriteRendererComponent["TilingFactor"].as<float>();
 				}
 
 				if (auto circleRendererComponent = entity["CircleRendererComponent"])
