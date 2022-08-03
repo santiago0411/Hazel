@@ -26,23 +26,41 @@ namespace Hazel
 	};
 }
 
-template<typename OStream, glm::length_t L, typename T, glm::qualifier Q>
-inline OStream& operator<<(OStream& os, const glm::vec<L, T, Q>& vector)
-{
-	return os << glm::to_string(vector);
-}
+template<glm::length_t L, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::vec<L, T, Q>> {
+	constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
 
-template<typename OStream, glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-inline OStream& operator<<(OStream& os, const glm::mat<C, R, T, Q>& matrix)
-{
-	return os << glm::to_string(matrix);
-}
+	template <typename FormatContext>
+	auto format(const glm::vec<L, T, Q>& vector, FormatContext& ctx) -> decltype(ctx.out()) {
+		return format_to(ctx.out(), glm::to_string(vector));
+	}
+};
 
-template<typename OStream, typename T, glm::qualifier Q>
-inline OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
-{
-	return os << glm::to_string(quaternion);
-}
+template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::mat<C, R, T, Q>> {
+	constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
+
+	template <typename FormatContext>
+	auto format(const glm::mat<C, R, T, Q>& matrix, FormatContext& ctx) -> decltype(ctx.out()) {
+		return format_to(ctx.out(), glm::to_string(matrix));
+	}
+};
+
+template<typename T, glm::qualifier Q>
+struct fmt::formatter<glm::qua<T, Q>> {
+	constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
+
+	template <typename FormatContext>
+	auto format(const glm::qua<T, Q>& quaternion, FormatContext& ctx) -> decltype(ctx.out()) {
+		return format_to(ctx.out(), glm::to_string(quaternion));
+	}
+};
 
 // Core log macros
 #define HZ_CORE_TRACE(...)		::Hazel::Log::GetCoreLogger()->trace(__VA_ARGS__)
