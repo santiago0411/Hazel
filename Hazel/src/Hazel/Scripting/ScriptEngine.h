@@ -4,6 +4,7 @@
 
 extern "C" {
 	typedef struct _MonoAssembly MonoAssembly;
+	typedef struct _MonoImage MonoImage;
 	typedef struct _MonoClass MonoClass;
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoMethod MonoMethod;
@@ -66,6 +67,7 @@ namespace Hazel
 		static void OnUpdateEntity(Entity entity, Timestep ts);
 
 		static Scene* GetSceneContext();
+		static MonoImage* GetCoreAssemblyImage();
 
 	private:
 		static void InitMono();
@@ -75,5 +77,6 @@ namespace Hazel
 		static void LoadAssemblyClasses(MonoAssembly* assembly);
 
 		friend class ScriptClass;
+		friend class ScriptRegistry;
 	};
 }

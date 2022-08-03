@@ -100,6 +100,12 @@ namespace Hazel
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Vector2(Vector3 vector)
+        {
+            return new Vector2(vector.X, vector.Y);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator *(Vector3 left, float scalar)
         {
             return new Vector3(left.X * scalar, left.Y * scalar, left.Z * scalar);

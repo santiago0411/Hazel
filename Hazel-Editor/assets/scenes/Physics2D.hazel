@@ -78,6 +78,8 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
+    ScriptComponent:
+      ClassName: Sandbox.Camera
   - Entity: 10188548795763618639
     TagComponent:
       Tag: Ground
@@ -124,12 +126,12 @@ Entities:
     TagComponent:
       Tag: Circle
     TransformComponent:
-      Position: [1.77383852, 5.70691633, 3.83721232]
-      Rotation: [0, 0, -0.635143816]
-      Scale: [0.999999881, 0.999999881, 1]
+      Position: [10.1527996, 4.76953936, 3.34366107]
+      Rotation: [0, 0, -0.635144353]
+      Scale: [3.93999934, 3.93999934, 3.93999982]
     CircleRendererComponent:
-      Color: [1, 0, 0, 1]
-      Thickness: 0.075000003
+      Color: [1, 0.403921574, 0, 1]
+      Thickness: 0.150000006
       Fade: 0.00499999989
     RigidBody2DComponent:
       BodyType: Dynamic

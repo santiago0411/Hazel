@@ -82,6 +82,7 @@ namespace Hazel
 
 	Scene::~Scene()
 	{
+		m_Registry.on_destroy<CameraComponent>().disconnect();
 		delete m_PhysicsWorld;
 	}
 
