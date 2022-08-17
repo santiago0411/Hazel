@@ -22,6 +22,7 @@ namespace Hazel
 	public:
 		ScriptClass() = default;
 		ScriptClass(const std::string& classNamespace, const std::string& className);
+		ScriptClass(MonoClass* cls);
 
 		MonoObject* Instantiate() const;
 		MonoMethod* GetMethod(const std::string& name, int parameterCount) const;
@@ -41,6 +42,7 @@ namespace Hazel
 
 		void InvokeOnCreate() const;
 		void InvokeOnUpdate(float ts) const;
+
 	private:
 		Ref<ScriptClass> m_ScriptClass;
 
@@ -57,6 +59,7 @@ namespace Hazel
 		static void Shutdown();
 
 		static void LoadAssembly(const std::filesystem::path& filepath);
+		static void LoadAppAssembly(const std::filesystem::path& filepath);
 
 		static bool EntityClassExists(const std::string& fullClassName);
 
@@ -74,7 +77,7 @@ namespace Hazel
 		static void ShutdownMono();
 
 		static MonoObject* InstantiateClass(MonoClass* monoClass);
-		static void LoadAssemblyClasses(MonoAssembly* assembly);
+		static void LoadAssemblyClasses();
 
 		friend class ScriptClass;
 		friend class ScriptRegistry;
