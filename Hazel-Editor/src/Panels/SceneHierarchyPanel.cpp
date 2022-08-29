@@ -194,19 +194,6 @@ namespace Hazel
 		}
 	}
 
-	template <typename T>
-	static void TryListComponent(Entity selectionContext, const char* componentName)
-	{
-		if (!selectionContext.HasComponent<T>())
-		{
-			if (ImGui::MenuItem(componentName))
-			{
-				selectionContext.AddComponent<T>();
-				ImGui::CloseCurrentPopup();
-			}
-		}
-	}
-
 	void SceneHierarchyPanel::DrawComponents(Entity entity)
 	{
 		if (entity.HasComponent<TagComponent>())
@@ -214,9 +201,9 @@ namespace Hazel
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
 
 			char buffer[256] = {};
-			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			strcpy_s(buffer, sizeof buffer, tag.c_str());
 
-			if (ImGui::InputText("##Tag", buffer, sizeof(buffer)))
+			if (ImGui::InputText("##Tag", buffer, sizeof buffer))
 				tag = std::string(buffer);
 		}
 
@@ -228,13 +215,13 @@ namespace Hazel
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			TryListComponent<CameraComponent>(m_SelectionContext, "Camera");
-			TryListComponent<ScriptComponent>(m_SelectionContext, "Script");
-			TryListComponent<SpriteRendererComponent>(m_SelectionContext, "Sprite Renderer");
-			TryListComponent<CircleRendererComponent>(m_SelectionContext, "Circle Renderer");
-			TryListComponent<RigidBody2DComponent>(m_SelectionContext, "Rigidbody 2D");
-			TryListComponent<BoxCollider2DComponent>(m_SelectionContext, "Box Collider 2D");
-			TryListComponent<CircleCollider2DComponent>(m_SelectionContext, "Circle Collider 2D");
+			TryListComponent<CameraComponent>("Camera");
+			TryListComponent<ScriptComponent>("Script");
+			TryListComponent<SpriteRendererComponent>("Sprite Renderer");
+			TryListComponent<CircleRendererComponent>("Circle Renderer");
+			TryListComponent<RigidBody2DComponent>("Rigidbody 2D");
+			TryListComponent<BoxCollider2DComponent>("Box Collider 2D");
+			TryListComponent<CircleCollider2DComponent>("Circle Collider 2D");
 			ImGui::EndPopup();
 		}
 
@@ -308,7 +295,7 @@ namespace Hazel
 			}
 		});
 
-		DrawComponent<ScriptComponent>("Script", entity, [](ScriptComponent& component)
+		DrawComponent<ScriptComponent>("Script", entity, [&](ScriptComponent& component)
 		{
 			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
 
@@ -318,8 +305,24 @@ namespace Hazel
 			if (!scriptClassExists)
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
-			if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+			if (ImGui::InputText("Class", buffer, sizeof buffer))
 				component.ClassName = buffer;
+
+			// Fields
+			Ref<ScriptInstance> instance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+			if (instance)
+			{
+				const auto& fields = instance->GetScriptClass()->GetFields();
+				for (const auto& [name, field] : fields)
+				{
+					if (field.Type == ScriptFieldType::Float)
+					{
+						float data = instance->GetFieldValue<float>(name);
+						if (ImGui::DragFloat(name.c_str(), &data))
+							instance->SetFieldValue(name, data);
+					}
+				}
+			}
 
 			if (!scriptClassExists)
 				ImGui::PopStyleColor();
@@ -400,5 +403,18 @@ namespace Hazel
 			ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
 		});
+	}
+
+	template <typename T>
+	void SceneHierarchyPanel::TryListComponent(const char* componentName)
+	{
+		if (!m_SelectionContext.HasComponent<T>())
+		{
+			if (ImGui::MenuItem(componentName))
+			{
+				m_SelectionContext.AddComponent<T>();
+				ImGui::CloseCurrentPopup();
+			}
+		}
 	}
 }

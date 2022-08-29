@@ -8,9 +8,33 @@
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/object.h>
+#include <mono/metadata/tabledefs.h>
 
 namespace Hazel
 {
+	static std::unordered_map<std::string, ScriptFieldType> s_ScriptFieldTypeMap =
+	{
+		{ "System.Boolean",	ScriptFieldType::Boolean	},
+		{ "System.Byte",	ScriptFieldType::Byte		},
+		{ "System.SByte",	ScriptFieldType::SByte		},
+		{ "System.UInt16",	ScriptFieldType::UShort		},
+		{ "System.Int16",	ScriptFieldType::Short		},
+		{ "System.UInt32",	ScriptFieldType::UInt		},
+		{ "System.Int32",	ScriptFieldType::Int		},
+		{ "System.UInt64",	ScriptFieldType::ULong		},
+		{ "System.Int64",	ScriptFieldType::Long		},
+		{ "System.Single",	ScriptFieldType::Float		},
+		{ "System.Double",	ScriptFieldType::Double		},
+		{ "System.Decimal",	ScriptFieldType::Decimal	},
+		{ "System.Char",	ScriptFieldType::Char		},
+		{ "System.String",	ScriptFieldType::String		},
+		{ "Hazel.Vector2",	ScriptFieldType::Vector2	},
+		{ "Hazel.Vector3",	ScriptFieldType::Vector3	},
+		{ "Hazel.Vector4",	ScriptFieldType::Vector4	},
+		{ "Hazel.Color",	ScriptFieldType::Color		},
+		{ "Hazel.Entity",	ScriptFieldType::Entity		},
+	};
+
 	namespace Utils
 	{
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
@@ -22,7 +46,7 @@ namespace Hazel
 
 			std::streampos end = stream.tellg();
 			stream.seekg(0, std::ios::beg);
-			uint32_t size = end - stream.tellg();
+			uint64_t size = end - stream.tellg();
 
 			if (size == 0)
 				return nullptr;
@@ -76,6 +100,45 @@ namespace Hazel
 				HZ_CORE_TRACE("{}.{}", nameSpace, name);
 			}
 		}
+
+		static ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
+		{
+			std::string typeName = mono_type_get_name(monoType);
+
+			const auto it = s_ScriptFieldTypeMap.find(typeName);
+ 			if (it == s_ScriptFieldTypeMap.end())
+				return ScriptFieldType::None;
+
+			return it->second;
+		}
+
+		static const char* FieldTypeToString(ScriptFieldType type)
+		{
+			switch (type)
+			{
+				case ScriptFieldType::Boolean:	return "Boolean";
+				case ScriptFieldType::Byte:		return "Byte";
+				case ScriptFieldType::SByte:	return "SByte";
+				case ScriptFieldType::UShort:	return "UShort";
+				case ScriptFieldType::Short:	return "Short";
+				case ScriptFieldType::UInt:		return "UInt";
+				case ScriptFieldType::Int:		return "Int";
+				case ScriptFieldType::ULong:	return "ULong";
+				case ScriptFieldType::Long:		return "Long";
+				case ScriptFieldType::Float:	return "Float";
+				case ScriptFieldType::Double:	return "Double";
+				case ScriptFieldType::Decimal:	return "Decimal";
+				case ScriptFieldType::Char:		return "Char";
+				case ScriptFieldType::String:	return "String";
+				case ScriptFieldType::Vector2:	return "Vector2";
+				case ScriptFieldType::Vector3:	return "Vector3";
+				case ScriptFieldType::Vector4:	return "Vector4";
+				case ScriptFieldType::Color:	return "Color";
+				case ScriptFieldType::Entity:	return "Entity";
+			}
+
+			return "<INVALID FIELD TYPE>";
+		}
 	}
 
 	struct ScriptEngineData
@@ -113,33 +176,6 @@ namespace Hazel
 
 		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
 		s_Data->EntityClass = ScriptClass(entityMonoClass);
-
-#if 0
-		
-		MonoObject* instance = s_Data->EntityClass.Instantiate();
-
-		MonoMethod* printMessageMethod = s_Data->EntityClass.GetMethod("PrintMessage", 0);
-		s_Data->EntityClass.InvokeMethod(instance, printMessageMethod);
-
-		MonoMethod* printIntMethod = s_Data->EntityClass.GetMethod("PrintInt", 1);
-		int value = 5;
-		void* param = &value;
-		s_Data->EntityClass.InvokeMethod(instance, printIntMethod, &param);
-
-		MonoMethod* printIntsMethod = s_Data->EntityClass.GetMethod("PrintInts", 2);
-		int value2 = 60;
-		void* params[2] =
-		{
-			&value,
-			&value2
-		};
-		s_Data->EntityClass.InvokeMethod(instance, printIntsMethod, params);
-
-		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello World from C++!");
-		MonoMethod* printCustomMessageMethod = s_Data->EntityClass.GetMethod("PrintCustomMessage", 1);
-		void* stringParam = monoString;
-		s_Data->EntityClass.InvokeMethod(instance, printCustomMessageMethod, &stringParam);
-#endif
 	}
 
 	void ScriptEngine::Shutdown()
@@ -241,19 +277,36 @@ namespace Hazel
 			mono_metadata_decode_row(typeDefinitionsTables, i, cols, MONO_TYPEDEF_SIZE);
 
 			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
+			const char* className = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
-			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, className);
 
 			if (monoClass == entityClass)
 				continue;
 
 			bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
+			if (!isEntity)
+				continue;
 
-			if (isEntity)
+			std::string fullName = strlen(nameSpace) != 0 ? fmt::format("{}.{}", nameSpace, className) : className;
+
+			Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
+			s_Data->EntityClasses[fullName] = scriptClass;
+
+			int fieldCount = mono_class_num_fields(monoClass);
+			HZ_CORE_WARN("{} has {} fields:", className, fieldCount);
+			void* iterator = nullptr;
+			while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))
 			{
-				std::string fullName = strlen(nameSpace) != 0 ? fmt::format("{}.{}", nameSpace, name) : name;
-				s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace, name);
+				const char* fieldName = mono_field_get_name(field);
+				uint32_t flags = mono_field_get_flags(field);
+				if (flags & FIELD_ATTRIBUTE_PUBLIC)
+				{
+					MonoType* type = mono_field_get_type(field);
+					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
+					HZ_CORE_WARN("    {} ({})", fieldName, Utils::FieldTypeToString(fieldType));
+					scriptClass->m_Fields[fieldName] = { fieldName, fieldType, field };
+				}
 			}
 		}
 	}
@@ -261,6 +314,12 @@ namespace Hazel
 	MonoImage* ScriptEngine::GetCoreAssemblyImage()
 	{
 		return s_Data->CoreAssemblyImage;
+	}
+
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID uuid)
+	{
+		const auto it = s_Data->EntityInstances.find(uuid);
+		return it == s_Data->EntityInstances.end() ? nullptr : it->second;
 	}
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
@@ -322,5 +381,24 @@ namespace Hazel
 			void* param = &ts;
 			m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 		}
+	}
+
+	bool ScriptInstance::GetFieldValueInternal(const std::string& name) const
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		const auto it = fields.find(name);
+		if (it == fields.end())
+			return false;
+
+		mono_field_get_value(m_Instance, it->second.Field, s_FieldValueBuffer);
+		return true;
+	}
+
+	void ScriptInstance::SetFieldValueInternal(const std::string& name, const void* value) const
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		const auto it = fields.find(name);
+		if (it != fields.end())
+			mono_field_set_value(m_Instance, it->second.Field, const_cast<void*>(value));
 	}
 }

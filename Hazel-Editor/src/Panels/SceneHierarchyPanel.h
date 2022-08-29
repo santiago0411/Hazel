@@ -23,6 +23,9 @@ namespace Hazel
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
 
+		template<typename T>
+		void TryListComponent(const char* componentName);
+
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;

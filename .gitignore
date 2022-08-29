@@ -15,6 +15,7 @@ HazelProfile*.json
 **.vcxproj.user
 **.DotSettings.user
 **.csproj
+.idea/
 
 # Directories
 vendor/VulkanSDK
