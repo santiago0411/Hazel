@@ -142,6 +142,7 @@ namespace Hazel
 
 	void Scene::OnRuntimeStart()
 	{
+		m_IsRunning = true;
 		InitPhysics2D();
 
 		// Scripting
@@ -159,6 +160,7 @@ namespace Hazel
 
 	void Scene::OnRuntimeStop()
 	{
+		m_IsRunning = false;
 		StopPhysics2D();
 		ScriptEngine::OnRuntimeStop();
 	}

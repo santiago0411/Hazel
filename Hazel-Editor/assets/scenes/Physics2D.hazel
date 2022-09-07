@@ -102,7 +102,7 @@ Entities:
       RestitutionThreshold: 0.5
   - Entity: 14886482924094536090
     TagComponent:
-      Tag: Sprite
+      Tag: Player
     TransformComponent:
       Position: [-0.989547133, 3.60501003, 0]
       Rotation: [0, 0, -0.635143816]

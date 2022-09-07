@@ -309,18 +309,62 @@ namespace Hazel
 				component.ClassName = buffer;
 
 			// Fields
-			Ref<ScriptInstance> instance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
-			if (instance)
+			bool sceneRunning = m_Context->IsRunning();
+			if (sceneRunning)
 			{
-				const auto& fields = instance->GetScriptClass()->GetFields();
-				for (const auto& [name, field] : fields)
+				Ref<ScriptInstance> instance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+				if (instance)
 				{
-					if (field.Type == ScriptFieldType::Float)
+					const auto& fields = instance->GetScriptClass()->GetFields();
+					for (const auto& [name, field] : fields)
 					{
-						float data = instance->GetFieldValue<float>(name);
-						if (ImGui::DragFloat(name.c_str(), &data))
-							instance->SetFieldValue(name, data);
+						if (field.Type == ScriptFieldType::Float)
+						{
+							float data = instance->GetFieldValue<float>(name);
+							if (ImGui::DragFloat(name.c_str(), &data))
+								instance->SetFieldValue(name, data);
+						}
 					}
+				}
+			}
+			else
+			{
+				if (scriptClassExists)
+				{
+					Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
+					const auto& fields = entityClass->GetFields();
+					auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+
+					for (const auto& [name, field] : fields)
+					{
+						// Field has been set in the editor
+						if (entityFields.find(name) != entityFields.end())
+						{
+							if (field.Type == ScriptFieldType::Float)
+							{
+								ScriptFieldInstance& sfi = entityFields.at(name);
+								float data = sfi.GetValue<float>();
+								if (ImGui::DragFloat(name.c_str(), &data))
+									sfi.SetValue(data);
+							}
+							
+						}
+						else
+						{
+							// Display control to set it
+							if (field.Type == ScriptFieldType::Float)
+							{
+								float data = 0.0f;
+								if (ImGui::DragFloat(name.c_str(), &data))
+								{
+									ScriptFieldInstance& sfi = entityFields[name];
+									sfi.Field = field;
+									sfi.SetValue(data);
+								}
+							}
+						}
+					}
+
 				}
 			}
 
