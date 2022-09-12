@@ -111,34 +111,6 @@ namespace Hazel
 
 			return it->second;
 		}
-
-		static const char* FieldTypeToString(ScriptFieldType type)
-		{
-			switch (type)
-			{
-				case ScriptFieldType::Boolean:	return "Boolean";
-				case ScriptFieldType::Byte:		return "Byte";
-				case ScriptFieldType::SByte:	return "SByte";
-				case ScriptFieldType::UShort:	return "UShort";
-				case ScriptFieldType::Short:	return "Short";
-				case ScriptFieldType::UInt:		return "UInt";
-				case ScriptFieldType::Int:		return "Int";
-				case ScriptFieldType::ULong:	return "ULong";
-				case ScriptFieldType::Long:		return "Long";
-				case ScriptFieldType::Float:	return "Float";
-				case ScriptFieldType::Double:	return "Double";
-				case ScriptFieldType::Decimal:	return "Decimal";
-				case ScriptFieldType::Char:		return "Char";
-				case ScriptFieldType::String:	return "String";
-				case ScriptFieldType::Vector2:	return "Vector2";
-				case ScriptFieldType::Vector3:	return "Vector3";
-				case ScriptFieldType::Vector4:	return "Vector4";
-				case ScriptFieldType::Color:	return "Color";
-				case ScriptFieldType::Entity:	return "Entity";
-			}
-
-			return "<INVALID FIELD TYPE>";
-		}
 	}
 
 	struct ScriptEngineData
@@ -325,7 +297,7 @@ namespace Hazel
 				{
 					MonoType* type = mono_field_get_type(field);
 					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
-					HZ_CORE_WARN("    {} ({})", fieldName, Utils::FieldTypeToString(fieldType));
+					HZ_CORE_WARN("    {} ({})", fieldName, Utils::ScriptFieldTypeToString(fieldType));
 					scriptClass->m_Fields[fieldName] = { fieldName, fieldType, field };
 				}
 			}

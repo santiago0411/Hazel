@@ -7,6 +7,22 @@
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/Components.h"
 
+#include "Hazel/Scripting/ScriptEngine.h"
+
+
+#define WRITE_FIELD_CASE(FieldType, Type)	\
+		case ScriptFieldType::FieldType:	\
+			out << sfi.GetValue<Type>();	\
+			break
+
+#define READ_FIELD_CASE(FieldType, Type)				\
+		case ScriptFieldType::FieldType:				\
+		{												\
+			auto data = scriptField["Data"].as<Type>(); \
+			sfi.SetValue(data);							\
+			break;										\
+		}												\
+
 namespace YAML
 {
 	template<>
@@ -81,6 +97,23 @@ namespace YAML
 			rhs.y = node[1].as<float>();
 			rhs.z = node[2].as<float>();
 			rhs.w = node[3].as<float>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<Hazel::UUID>
+	{
+		static Node encode(const Hazel::UUID& uuid)
+		{
+			Node node;
+			node.push_back((uint64_t)uuid);
+			return node;
+		}
+
+		static bool decode(const Node& node, Hazel::UUID& uuid)
+		{
+			uuid = node.as<uint64_t>();
 			return true;
 		}
 	};
@@ -201,6 +234,59 @@ namespace Hazel
 			auto& sc = entity.GetComponent<ScriptComponent>();
 			out << YAML::Key << "ClassName" << YAML::Value << sc.ClassName;
 
+			// Fields
+			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+			const auto& fields = entityClass->GetFields();
+			const auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+
+			if (!fields.empty())
+			{
+				out << YAML::Key << "ScriptFields" << YAML::Value;  // ScriptFields
+				out << YAML::BeginSeq;
+
+				for (const auto& [name, field] : fields)
+				{
+					if (entityFields.find(name) == entityFields.end())
+						continue;
+
+					// - Name: FieldName
+					//   Type: Int
+					//	 Data: 5
+
+					out << YAML::BeginMap; // Field
+					out << YAML::Key << "Name" << YAML::Value << name;
+					out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+					out << YAML::Key << "Data" << YAML::Value;
+
+					const ScriptFieldInstance& sfi = entityFields.at(name);
+
+					switch (field.Type)
+					{
+						WRITE_FIELD_CASE(Boolean, bool);
+						WRITE_FIELD_CASE(Byte, uint8_t);
+						WRITE_FIELD_CASE(SByte, int8_t);
+						WRITE_FIELD_CASE(UShort, uint16_t);
+						WRITE_FIELD_CASE(Short, int16_t);
+						WRITE_FIELD_CASE(UInt, uint32_t);
+						WRITE_FIELD_CASE(Int, int32_t);
+						WRITE_FIELD_CASE(ULong, uint64_t);
+						WRITE_FIELD_CASE(Long, int64_t);
+						WRITE_FIELD_CASE(Float, float);
+						WRITE_FIELD_CASE(Double, double);
+						WRITE_FIELD_CASE(Decimal, double);
+						WRITE_FIELD_CASE(Char, char);
+						// WRITE_FIELD_CASE(String, std::string); NYI
+						WRITE_FIELD_CASE(Vector2, glm::vec2);
+						WRITE_FIELD_CASE(Vector3, glm::vec3);
+						WRITE_FIELD_CASE(Vector4, glm::vec4);
+						WRITE_FIELD_CASE(Color, glm::vec4);
+						WRITE_FIELD_CASE(Entity, UUID);
+					}
+					out << YAML::EndMap; // Field
+				}
+
+				out << YAML::EndSeq;
+			}
 			out << YAML::EndMap; // ScriptComponent
 		}
 
@@ -331,13 +417,13 @@ namespace Hazel
 			{
 				auto uuid = entity["Entity"].as<uint64_t>();
 
-				std::string name;
+				std::string entityName;
 				if (auto tagComponent = entity["TagComponent"])
-					name = tagComponent["Tag"].as<std::string>();
+					entityName = tagComponent["Tag"].as<std::string>();
 
-				HZ_CORE_TRACE("Deserialize entity with ID = {0}, name = {1}", uuid, name);
+				HZ_CORE_TRACE("Deserialize entity with ID = {0}, name = {1}", uuid, entityName);
 
-				Entity deserializedEntity = m_Scene->CreateEntityWithUuid(uuid, name);
+				Entity deserializedEntity = m_Scene->CreateEntityWithUuid(uuid, entityName);
 
 				if (auto transformComponent = entity["TransformComponent"])
 				{
@@ -371,6 +457,53 @@ namespace Hazel
 				{
 					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
 					sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+
+					if (auto scriptFields = scriptComponent["ScriptFields"])
+					{
+						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+						HZ_CORE_ASSERT(entityClass);
+						const auto& fields = entityClass->GetFields();
+						auto& entityFields = ScriptEngine::GetScriptFieldMap(deserializedEntity);
+
+						for (auto scriptField : scriptFields)
+						{
+							auto fieldName = scriptField["Name"].as<std::string>();
+							auto typeString = scriptField["Type"].as<std::string>();
+							ScriptFieldType fieldType = Utils::ScriptFieldTypeFromString(typeString);
+
+							if (fields.find(fieldName) == fields.end())
+							{
+								HZ_CORE_WARN("Field '{}' does not exist in Class '{}'", fieldName, sc.ClassName);
+								continue;
+							}
+
+							ScriptFieldInstance& sfi = entityFields[fieldName];
+							sfi.Field = fields.at(fieldName);
+
+							switch (fieldType)
+							{
+								READ_FIELD_CASE(Boolean, bool);
+								READ_FIELD_CASE(Byte, uint8_t);
+								READ_FIELD_CASE(SByte, int8_t);
+								READ_FIELD_CASE(UShort, uint16_t);
+								READ_FIELD_CASE(Short, int16_t);
+								READ_FIELD_CASE(UInt, uint32_t);
+								READ_FIELD_CASE(Int, int32_t);
+								READ_FIELD_CASE(ULong, uint64_t);
+								READ_FIELD_CASE(Long, int64_t);
+								READ_FIELD_CASE(Float, float);
+								READ_FIELD_CASE(Double, double);
+								READ_FIELD_CASE(Decimal, double);
+								READ_FIELD_CASE(Char, char);
+								// READ_FIELD_CASE(String, std::string); NYI
+								READ_FIELD_CASE(Vector2, glm::vec2);
+								READ_FIELD_CASE(Vector3, glm::vec3);
+								READ_FIELD_CASE(Vector4, glm::vec4);
+								READ_FIELD_CASE(Color, glm::vec4);
+								READ_FIELD_CASE(Entity, UUID);
+							} 
+						}
+					}
 				}
 
 				if (auto spriteRendererComponent = entity["SpriteRendererComponent"])
