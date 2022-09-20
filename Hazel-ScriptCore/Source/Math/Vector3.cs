@@ -25,6 +25,58 @@ namespace Hazel
             Y = y;
             Z = z;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3(Vector2 xy, float z)
+        {
+            X = xy.X;
+            Y = xy.Y;
+            Z = z;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3(float x, Vector2 yz)
+        {
+            X = x;
+            Y = yz.X;
+            Z = yz.Y;
+        }
+
+        public Vector2 XY
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Vector2(X, Y);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                X = value.X;
+                Y = value.Y;
+            }
+        }
+
+        public Vector2 XZ
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Vector2(X, Z);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                X = value.X;
+                Z = value.Y;
+            }
+        }
+        
+        public Vector2 YZ
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Vector2(Y, Z);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                Y = value.X;
+                Z = value.Y;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float Length()

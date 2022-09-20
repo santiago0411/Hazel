@@ -38,6 +38,7 @@ namespace Hazel
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		Entity GetEntityByUUID(UUID id);
+		Entity FindEntityByName(std::string_view name);
 
 		Entity GetPrimaryCameraEntity();
 

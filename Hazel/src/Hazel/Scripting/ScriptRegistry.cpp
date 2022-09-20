@@ -36,6 +36,23 @@ namespace Hazel
 		return s_EntityHasComponentFunctions.at(managedType)(entity);
 	}
 
+	static uint64_t Entity_FindEntityByName(MonoString* monoString)
+	{
+		char* cStr = mono_string_to_utf8(monoString);
+
+		Scene* scene = ScriptEngine::GetSceneContext();
+		HZ_CORE_ASSERT(scene);
+		Entity entity = scene->FindEntityByName(cStr);
+		mono_free(cStr);
+
+		return entity ? entity.GetUUID() : 0;
+	}
+
+	static MonoObject* GetScriptInstance(uint64_t entityId)
+	{
+		return ScriptEngine::GetManagedInstance(entityId);
+	}
+
 	static void TransformComponent_GetPosition(uint64_t entityId, glm::vec3* outPosition)
 	{
 		*outPosition = GetEntity(entityId).GetComponent<TransformComponent>().Position;
@@ -134,6 +151,8 @@ namespace Hazel
 	void ScriptRegistry::RegisterMethods()
 	{
 		HZ_ADD_INTERNAL_CALL(Entity_HasComponent);
+		HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName);
+		HZ_ADD_INTERNAL_CALL(GetScriptInstance);
 
 		HZ_ADD_INTERNAL_CALL(TransformComponent_GetPosition);
 		HZ_ADD_INTERNAL_CALL(TransformComponent_SetPosition);

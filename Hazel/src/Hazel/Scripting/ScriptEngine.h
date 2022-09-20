@@ -112,6 +112,8 @@ namespace Hazel
 			SetFieldValueInternal(name, &value);
 		}
 
+		MonoObject* GetManagedObject() const { return m_Instance; }
+
 	private:
 		bool GetFieldValueInternal(const std::string& name) const;
 		void SetFieldValueInternal(const std::string& name, const void* value) const;
@@ -152,6 +154,8 @@ namespace Hazel
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID uuid);
 
 		static ScriptFieldMap& GetScriptFieldMap(Entity entity);
+
+		static MonoObject* GetManagedInstance(UUID uuid);
 
 	private:
 		static void InitMono();

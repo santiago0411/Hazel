@@ -321,6 +321,12 @@ namespace Hazel
 		return s_Data->EntityScriptFields[entity.GetUUID()];
 	}
 
+	MonoObject* ScriptEngine::GetManagedInstance(UUID uuid)
+	{
+		const auto& scriptInstance = GetEntityScriptInstance(uuid);
+		return scriptInstance ? scriptInstance->GetManagedObject() : nullptr;
+	}
+
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
 	{
 		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);

@@ -40,5 +40,17 @@ namespace Hazel
             // TODO cache
             return component;
         }
+
+        public Entity FindEntityByName(string name)
+        {
+            ulong entityId = InternalCalls.Entity_FindEntityByName(name);
+            return entityId == 0 ? null : new Entity(entityId);
+        }
+
+        public T As<T>() where T : Entity
+        {
+            object instance = InternalCalls.GetScriptInstance(Id);
+            return instance as T;
+        }
     }
 }
