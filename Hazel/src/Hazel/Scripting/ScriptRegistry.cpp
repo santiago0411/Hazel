@@ -145,6 +145,7 @@ namespace Hazel
 
 	void ScriptRegistry::RegisterComponents()
 	{
+		s_EntityHasComponentFunctions.clear();
 		RegisterComponent(AllComponents{});
 	}
 

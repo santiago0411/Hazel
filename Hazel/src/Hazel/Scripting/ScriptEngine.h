@@ -140,6 +140,8 @@ namespace Hazel
 		static void LoadAssembly(const std::filesystem::path& filepath);
 		static void LoadAppAssembly(const std::filesystem::path& filepath);
 
+		static void ReloadAssembly();
+
 		static bool EntityClassExists(const std::string& fullClassName);
 		static Ref<ScriptClass> GetEntityClass(const std::string& fullClassName);
 
