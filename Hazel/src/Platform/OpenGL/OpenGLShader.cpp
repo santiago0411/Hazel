@@ -296,7 +296,7 @@ namespace Hazel
 				m_OpenGLSourceCode[stage] = glslCompiler.compile();
 				auto& source = m_OpenGLSourceCode[stage];
 
-				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str());
+				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
 				if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					HZ_CORE_ERROR(result.GetErrorMessage());
