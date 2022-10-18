@@ -1,6 +1,7 @@
 #include "hzpch.h"
 #include "ScriptEngine.h"
 
+#include "Hazel/Core/Application.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scripting/ScriptRegistry.h"
@@ -9,6 +10,8 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/tabledefs.h>
+
+#include "FileWatch.hpp"
 
 namespace Hazel
 {
@@ -134,10 +137,27 @@ namespace Hazel
 
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
+		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
+		bool AssemblyReloadPending = false;
+
 		Scene* SceneContext = nullptr;
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
+
+	static void OnAppAssemblyFileSystemEvent(const std::string& path, const filewatch::Event changeType)
+	{
+		if (changeType == filewatch::Event::modified && !s_Data->AssemblyReloadPending)
+		{
+			s_Data->AssemblyReloadPending = true;
+
+			Application::Get().SubmitToMainThread([] 
+			{
+				s_Data->AppAssemblyFileWatcher.reset();
+				ScriptEngine::ReloadAssembly();
+			});
+		}
+	}
 
 	void ScriptEngine::Init()
 	{
@@ -199,6 +219,9 @@ namespace Hazel
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 		// Utils::PrintAssemblyTypes(s_Data->AppAssembly);
+
+		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
+		s_Data->AssemblyReloadPending = false;
 	}
 
 	void ScriptEngine::ReloadAssembly()

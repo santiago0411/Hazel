@@ -12,7 +12,7 @@ namespace Sandbox
         private void OnCreate()
         {
             _rigidBody = GetComponent<RigidBody2DComponent>();
-            GetComponent<SpriteRendererComponent>().Color = Color.Cyan;
+            GetComponent<SpriteRendererComponent>().Color = Color.Blue;
         }
 
         private void OnUpdate(float ts)

@@ -21,6 +21,7 @@ project "Hazel-Editor"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.filewatch}",
 	}
 
 	links

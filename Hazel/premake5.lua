@@ -43,6 +43,7 @@ project "Hazel"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.filewatch}",
 	}
 
 	links
