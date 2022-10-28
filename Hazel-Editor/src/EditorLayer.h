@@ -36,6 +36,7 @@ namespace Hazel
 		void OnScenePlay();
 		void OnSceneSimulate();
 		void OnSceneStop();
+		void OnScenePause();
 
 
 		void DuplicateSelectedEntity();
@@ -68,6 +69,6 @@ namespace Hazel
 
 		SceneState m_SceneState = SceneState::Edit;
 
-		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
+		Ref<Texture2D> m_IconPlay, m_IconPause, m_IconStep, m_IconStop, m_IconSimulate;
 	};
 }

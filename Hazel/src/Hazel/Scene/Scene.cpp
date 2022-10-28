@@ -78,11 +78,13 @@ namespace Hazel
 	Scene::Scene()
 	{
 		m_Registry.on_construct<CameraComponent>().connect<&Scene::OnCameraComponentAdded>(this);
+		m_Registry.on_construct<NativeScriptComponent>().connect<&Scene::OnNativeScriptComponentAdded>(this);
 	}
 
 	Scene::~Scene()
 	{
 		m_Registry.on_destroy<CameraComponent>().disconnect();
+		m_Registry.on_destroy<NativeScriptComponent>().disconnect();
 		delete m_PhysicsWorld;
 	}
 
@@ -99,13 +101,12 @@ namespace Hazel
 		auto& srcSceneRegistry = scene->m_Registry;
 		auto& dstSceneRegistry = newScene->m_Registry;
 
-		srcSceneRegistry.group<IdComponent, TagComponent>().each(
-			[&](const IdComponent& idComponent, const TagComponent& tagComponent)
-			{
-				auto uuid = idComponent.Id;
-				Entity newEntity = newScene->CreateEntityWithUuid(uuid, tagComponent.Tag);
-				enttMap[uuid] = newEntity;
-			});
+		srcSceneRegistry.group<IdComponent, TagComponent>().each([&](const IdComponent& idComponent, const TagComponent& tagComponent)
+		{
+			auto uuid = idComponent.Id;
+			Entity newEntity = newScene->CreateEntityWithUuid(uuid, tagComponent.Tag);
+			enttMap[uuid] = newEntity;
+		});
 
 		CopyAllComponents(dstSceneRegistry, srcSceneRegistry, enttMap);
 
@@ -182,13 +183,15 @@ namespace Hazel
 
 	void Scene::OnUpdateSimulation(Timestep ts, const EditorCamera& camera)
 	{
-		// Physics
+		if (!m_IsPaused || m_StepFrames-- > 0)
 		{
-			constexpr int32_t velocityIterations = 6;
-			constexpr int32_t positionIterations = 2;
-			m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+			// Physics
+			{
+				constexpr int32_t velocityIterations = 6;
+				constexpr int32_t positionIterations = 2;
+				m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
-			m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
+				m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
 				{
 					Entity entity = { entityId, this };
 					auto& transform = entity.GetComponent<TransformComponent>();
@@ -199,6 +202,7 @@ namespace Hazel
 					transform.Position.y = position.y;
 					transform.Rotation.z = body->GetAngle();
 				});
+			}
 		}
 
 		RenderScene(camera);
@@ -206,38 +210,41 @@ namespace Hazel
 
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
-		// Update scripts
+		if (!m_IsPaused || m_StepFrames-- > 0)
 		{
-			auto view = m_Registry.view<ScriptComponent>();
-			for (auto e : view)
+			// Update scripts
 			{
-				Entity entity{ e, this };
-				ScriptEngine::OnUpdateEntity(entity, ts);
+				auto view = m_Registry.view<ScriptComponent>();
+				for (auto e : view)
+				{
+					Entity entity{ e, this };
+					ScriptEngine::OnUpdateEntity(entity, ts);
+				}
+
+				m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
+				{
+					nsc.Instance->OnUpdate(ts);
+				});
 			}
 
-			m_Registry.view<NativeScriptComponent>().each([=](NativeScriptComponent& nsc)
+			// Physics
 			{
-				nsc.Instance->OnUpdate(ts);
-			});
-		}
+				constexpr int32_t velocityIterations = 6;
+				constexpr int32_t positionIterations = 2;
+				m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
-		// Physics
-		{
-			constexpr int32_t velocityIterations = 6;
-			constexpr int32_t positionIterations = 2;
-			m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+				m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
+				{
+					Entity entity = { entityId, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
 
-			m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
-			{
-				Entity entity = { entityId, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-
-				const auto* body = static_cast<b2Body*>(rbc.RuntimeBody);
-				const auto& position = body->GetPosition();
-				transform.Position.x = position.x;
-				transform.Position.y = position.y;
-				transform.Rotation.z = body->GetAngle();
-			});
+					const auto* body = static_cast<b2Body*>(rbc.RuntimeBody);
+					const auto& position = body->GetPosition();
+					transform.Position.x = position.x;
+					transform.Position.y = position.y;
+					transform.Rotation.z = body->GetAngle();
+				});
+			}
 		}
 
 		// Render
@@ -328,64 +335,69 @@ namespace Hazel
 		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
 
 		m_Registry.view<RigidBody2DComponent>().each([this](EntityId entityId, RigidBody2DComponent& rbc)
+		{
+			Entity entity = { entityId, this };
+			auto& transform = entity.GetComponent<TransformComponent>();
+
+			b2BodyDef bodyDef;
+			bodyDef.type = RigidBody2DTypeToBox2DBody(rbc.Type);
+			bodyDef.position.Set(transform.Position.x, transform.Position.y);
+			bodyDef.angle = transform.Rotation.z;
+
+			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+			body->SetFixedRotation(rbc.FixedRotation);
+			rbc.RuntimeBody = body;
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
-				Entity entity = { entityId, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
 
-				b2BodyDef bodyDef;
-				bodyDef.type = RigidBody2DTypeToBox2DBody(rbc.Type);
-				bodyDef.position.Set(transform.Position.x, transform.Position.y);
-				bodyDef.angle = transform.Rotation.z;
+				b2PolygonShape boxShape;
+				boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y,
+					b2Vec2(bc2d.Offset.x, bc2d.Offset.y), 0.0f);
 
-				b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
-				body->SetFixedRotation(rbc.FixedRotation);
-				rbc.RuntimeBody = body;
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &boxShape;
+				fixtureDef.density = bc2d.Density;
+				fixtureDef.friction = bc2d.Friction;
+				fixtureDef.restitution = bc2d.Restitution;
+				fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
 
-				if (entity.HasComponent<BoxCollider2DComponent>())
-				{
-					auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
 
-					b2PolygonShape boxShape;
-					boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y,
-						b2Vec2(bc2d.Offset.x, bc2d.Offset.y), 0.0f);
+				b2CircleShape circleShape;
+				circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
+				circleShape.m_radius = transform.Scale.x * cc2d.Radius;
 
-					b2FixtureDef fixtureDef;
-					fixtureDef.shape = &boxShape;
-					fixtureDef.density = bc2d.Density;
-					fixtureDef.friction = bc2d.Friction;
-					fixtureDef.restitution = bc2d.Restitution;
-					fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-					body->CreateFixture(&fixtureDef);
-				}
-
-				if (entity.HasComponent<CircleCollider2DComponent>())
-				{
-					auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
-
-					b2CircleShape circleShape;
-					circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
-					circleShape.m_radius = transform.Scale.x * cc2d.Radius;
-
-					b2FixtureDef fixtureDef;
-					fixtureDef.shape = &circleShape;
-					fixtureDef.density = cc2d.Density;
-					fixtureDef.friction = cc2d.Friction;
-					fixtureDef.restitution = cc2d.Restitution;
-					fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-					body->CreateFixture(&fixtureDef);
-				}
-			});
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &circleShape;
+				fixtureDef.density = cc2d.Density;
+				fixtureDef.friction = cc2d.Friction;
+				fixtureDef.restitution = cc2d.Restitution;
+				fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
+		});
 
 		m_Registry.view<NativeScriptComponent>().each([this](EntityId entityId, NativeScriptComponent& nsc)
-			{
-				nsc.Instance = nsc.InstantiateScript();
-				nsc.Instance->m_Entity = Entity{ entityId, this };
-				nsc.Instance->OnCreate();
-			});
+		{
+			nsc.Instance = nsc.InstantiateScript();
+			nsc.Instance->m_Entity = Entity{ entityId, this };
+			nsc.Instance->OnCreate();
+		});
 	}
 
 	void Scene::StopPhysics2D()
 	{
+		m_Registry.view<NativeScriptComponent>().each([](EntityId entityId, NativeScriptComponent& nsc)
+		{
+			nsc.Instance->OnDestroy();
+		});
+
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
 	}
@@ -395,14 +407,14 @@ namespace Hazel
 		Renderer2D::BeginScene(camera);
 
 		m_Registry.group<TransformComponent, SpriteRendererComponent>().each([](EntityId entityId, TransformComponent& tc, SpriteRendererComponent& src)
-			{
-				Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
-			});
+		{
+			Renderer2D::DrawSprite(tc.GetTransform(), src, (int32_t)entityId);
+		});
 
 		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
-			{
-				Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
-			});
+		{
+			Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
+		});
 
 		Renderer2D::EndScene();
 	}
@@ -412,5 +424,16 @@ namespace Hazel
 		auto& component = registry.get<CameraComponent>(entity);
 		if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
 			component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+	}
+
+	void Scene::OnNativeScriptComponentAdded(entt::registry& registry, entt::entity entity)
+	{
+		if (!m_IsRunning)
+			return;
+
+		auto& nsc = registry.get<NativeScriptComponent>(entity);
+		nsc.Instance = nsc.InstantiateScript();
+		nsc.Instance->m_Entity = Entity{ entity, this };
+		nsc.Instance->OnCreate();
 	}
 }
