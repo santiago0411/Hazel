@@ -2,6 +2,7 @@
 #include "ScriptEngine.h"
 
 #include "Hazel/Core/Application.h"
+#include "Hazel/Core/FileSystem.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scripting/ScriptRegistry.h"
@@ -40,35 +41,17 @@ namespace Hazel
 
 	namespace Utils
 	{
-		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
-		{
-			std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-
-			if (!stream)
-				return nullptr;
-
-			std::streampos end = stream.tellg();
-			stream.seekg(0, std::ios::beg);
-			uint64_t size = end - stream.tellg();
-
-			if (size == 0)
-				return nullptr;
-
-			auto* buffer = new char[size];
-			stream.read(buffer, size);
-			stream.close();
-
-			*outSize = (uint32_t)size;
-			return buffer;
-		}
-
 		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
 		{
-			uint32_t fileSize = 0;
-			char* fileData = ReadBytes(assemblyPath, &fileSize);
+			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
+			if (!fileData)
+			{
+				HZ_CORE_ERROR("Failed to read assembly: {0}", assemblyPath.string());
+				return nullptr;
+			}
 
 			MonoImageOpenStatus status;
-			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+			MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), (uint32_t)fileData.Size(), 1, &status, 0);
 
 			if (status != MONO_IMAGE_OK)
 			{
@@ -80,8 +63,6 @@ namespace Hazel
 			std::string pathString = assemblyPath.string();
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
-
-			delete[] fileData;
 
 			return assembly;
 		}
