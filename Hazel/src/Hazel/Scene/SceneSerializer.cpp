@@ -461,47 +461,49 @@ namespace Hazel
 					if (auto scriptFields = scriptComponent["ScriptFields"])
 					{
 						Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
-						HZ_CORE_ASSERT(entityClass);
-						const auto& fields = entityClass->GetFields();
-						auto& entityFields = ScriptEngine::GetScriptFieldMap(deserializedEntity);
-
-						for (auto scriptField : scriptFields)
+						if (entityClass)
 						{
-							auto fieldName = scriptField["Name"].as<std::string>();
-							auto typeString = scriptField["Type"].as<std::string>();
-							ScriptFieldType fieldType = Utils::ScriptFieldTypeFromString(typeString);
+							const auto& fields = entityClass->GetFields();
+							auto& entityFields = ScriptEngine::GetScriptFieldMap(deserializedEntity);
 
-							if (fields.find(fieldName) == fields.end())
+							for (auto scriptField : scriptFields)
 							{
-								HZ_CORE_WARN("Field '{}' does not exist in Class '{}'", fieldName, sc.ClassName);
-								continue;
+								auto fieldName = scriptField["Name"].as<std::string>();
+								auto typeString = scriptField["Type"].as<std::string>();
+								ScriptFieldType fieldType = Utils::ScriptFieldTypeFromString(typeString);
+
+								if (fields.find(fieldName) == fields.end())
+								{
+									HZ_CORE_WARN("Field '{}' does not exist in Class '{}'", fieldName, sc.ClassName);
+									continue;
+								}
+
+								ScriptFieldInstance& sfi = entityFields[fieldName];
+								sfi.Field = fields.at(fieldName);
+
+								switch (fieldType)
+								{
+									READ_FIELD_CASE(Boolean, bool);
+									READ_FIELD_CASE(Byte, uint8_t);
+									READ_FIELD_CASE(SByte, int8_t);
+									READ_FIELD_CASE(UShort, uint16_t);
+									READ_FIELD_CASE(Short, int16_t);
+									READ_FIELD_CASE(UInt, uint32_t);
+									READ_FIELD_CASE(Int, int32_t);
+									READ_FIELD_CASE(ULong, uint64_t);
+									READ_FIELD_CASE(Long, int64_t);
+									READ_FIELD_CASE(Float, float);
+									READ_FIELD_CASE(Double, double);
+									READ_FIELD_CASE(Decimal, double);
+									READ_FIELD_CASE(Char, char);
+									// READ_FIELD_CASE(String, std::string); NYI
+									READ_FIELD_CASE(Vector2, glm::vec2);
+									READ_FIELD_CASE(Vector3, glm::vec3);
+									READ_FIELD_CASE(Vector4, glm::vec4);
+									READ_FIELD_CASE(Color, glm::vec4);
+									READ_FIELD_CASE(Entity, UUID);
+								}
 							}
-
-							ScriptFieldInstance& sfi = entityFields[fieldName];
-							sfi.Field = fields.at(fieldName);
-
-							switch (fieldType)
-							{
-								READ_FIELD_CASE(Boolean, bool);
-								READ_FIELD_CASE(Byte, uint8_t);
-								READ_FIELD_CASE(SByte, int8_t);
-								READ_FIELD_CASE(UShort, uint16_t);
-								READ_FIELD_CASE(Short, int16_t);
-								READ_FIELD_CASE(UInt, uint32_t);
-								READ_FIELD_CASE(Int, int32_t);
-								READ_FIELD_CASE(ULong, uint64_t);
-								READ_FIELD_CASE(Long, int64_t);
-								READ_FIELD_CASE(Float, float);
-								READ_FIELD_CASE(Double, double);
-								READ_FIELD_CASE(Decimal, double);
-								READ_FIELD_CASE(Char, char);
-								// READ_FIELD_CASE(String, std::string); NYI
-								READ_FIELD_CASE(Vector2, glm::vec2);
-								READ_FIELD_CASE(Vector3, glm::vec3);
-								READ_FIELD_CASE(Vector4, glm::vec4);
-								READ_FIELD_CASE(Color, glm::vec4);
-								READ_FIELD_CASE(Entity, UUID);
-							} 
 						}
 					}
 				}

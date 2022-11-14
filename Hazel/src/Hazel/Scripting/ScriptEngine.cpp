@@ -9,8 +9,10 @@
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/mono-debug.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/tabledefs.h>
+#include <mono/metadata/threads.h>
 
 #include "FileWatch.hpp"
 
@@ -41,7 +43,7 @@ namespace Hazel
 
 	namespace Utils
 	{
-		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
+		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)
 		{
 			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 			if (!fileData)
@@ -60,10 +62,31 @@ namespace Hazel
 				return nullptr;
 			}
 
+			if (loadPDB)
+			{
+				std::filesystem::path pdbPath = assemblyPath;
+				pdbPath.replace_extension(".pdb");
+
+				if (std::filesystem::exists(pdbPath))
+				{
+					ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(pdbPath);
+					if (pdbFileData)
+					{
+						mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), (int32_t)pdbFileData.Size());
+						HZ_CORE_INFO("Loaded PDB: {0}", pdbPath.string());
+					}
+					else
+					{
+						HZ_CORE_WARN("Failed to load PDB: {0}", pdbPath.string());
+					}
+				}
+			}
+
 			std::string pathString = assemblyPath.string();
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
 
+			HZ_CORE_INFO("Loaded assembly: {0}", assemblyPath.string());
 			return assembly;
 		}
 
@@ -121,6 +144,8 @@ namespace Hazel
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadPending = false;
 
+		bool EnableDebugging = true;
+
 		Scene* SceneContext = nullptr;
 	};
 
@@ -147,10 +172,13 @@ namespace Hazel
 		InitMono();
 		ScriptRegistry::RegisterMethods();
 
-		LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll");
-		LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
-		LoadAssemblyClasses();
+		if (!LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll"))
+			return;
 
+		if (!LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll"))
+			return;
+
+		LoadAssemblyClasses();
 		ScriptRegistry::RegisterComponents();
 
 		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
@@ -167,9 +195,25 @@ namespace Hazel
 	{
 		mono_set_assemblies_path("mono/lib");
 
+		if (s_Data->EnableDebugging)
+		{
+			const char* argv[2] = {
+				"--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
+				"--soft-breakpoints"
+			};
+
+			mono_jit_parse_options(std::size(argv), (char**)argv);
+			mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+		}
+
 		MonoDomain* rootDomain = mono_jit_init("HazelJITRuntime");
 		HZ_CORE_ASSERT(rootDomain);
 		s_Data->RootDomain = rootDomain;
+
+		if (s_Data->EnableDebugging)
+			mono_debug_domain_create(s_Data->RootDomain);
+
+		mono_thread_set_main(mono_thread_current());
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -183,26 +227,42 @@ namespace Hazel
 		s_Data->RootDomain = nullptr;
 	}
 
-	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain("HazelScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssemblyFilepath = filepath;
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+		if (!s_Data->CoreAssembly)
+		{
+			HZ_CORE_ERROR("Could not load Hazel-ScriptCore assembly.");
+			return false;
+		}
+
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 		// Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
+
+		return true;
 	}
 
-	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppAssemblyFilepath = filepath;
-		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+		if (!s_Data->AppAssembly)
+		{
+			HZ_CORE_ERROR("Could not load app assembly.");
+			return false;
+		}
+
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 		// Utils::PrintAssemblyTypes(s_Data->AppAssembly);
 
 		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadPending = false;
+
+		return true;
 	}
 
 	void ScriptEngine::ReloadAssembly()
@@ -212,15 +272,17 @@ namespace Hazel
 		mono_domain_set(mono_get_root_domain(), false);
 		mono_domain_unload(s_Data->AppDomain);
 
-		LoadAssembly(s_Data->CoreAssemblyFilepath);
-		LoadAppAssembly(s_Data->AppAssemblyFilepath);
+		if (!LoadAssembly(s_Data->CoreAssemblyFilepath))
+			return;
+
+		if (!LoadAppAssembly(s_Data->AppAssemblyFilepath))
+			return;
 
 		LoadAssemblyClasses();
+		ScriptRegistry::RegisterComponents();
 
 		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
 		s_Data->EntityClass = ScriptClass(entityMonoClass);
-
-		ScriptRegistry::RegisterComponents();
 	}
 
 	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
@@ -273,10 +335,16 @@ namespace Hazel
 	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
 	{
 		UUID entityUUID = entity.GetUUID();
-		HZ_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
-
-		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-		instance->InvokeOnUpdate(ts);
+		auto it = s_Data->EntityInstances.find(entityUUID);
+		if (it != s_Data->EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = it->second;
+			instance->InvokeOnUpdate(ts);
+		}
+		else
+		{
+			HZ_CORE_ERROR("Could not find ScriptInstance for entity {0}", entityUUID);
+		}
 	}
 
 	Scene* ScriptEngine::GetSceneContext()
@@ -385,7 +453,9 @@ namespace Hazel
 
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** parameters)
 	{
-		return mono_runtime_invoke(method, instance, parameters, nullptr);
+		MonoObject* exception = nullptr;
+		// TODO get info from exception
+		return mono_runtime_invoke(method, instance, parameters, &exception);
 	}
 
 	ScriptInstance::ScriptInstance(const Ref<ScriptClass>& scriptClass, UUID entityId)
