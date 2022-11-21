@@ -44,11 +44,15 @@ namespace Hazel
 		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
 		if (commandLineArgs.Count > 1)
 		{
-			auto sceneFilePath = commandLineArgs[1];
-			OpenScene(sceneFilePath);
+			auto projectFilePath = commandLineArgs[1];
+			OpenProject(projectFilePath);
+		}
+		else
+		{
+			NewProject();
 		}
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);  
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		Renderer2D::SetLineWidth(4.0f);
@@ -204,7 +208,7 @@ namespace Hazel
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Renderer2D Stats");
 		auto stats = Renderer2D::GetStats();
@@ -242,7 +246,7 @@ namespace Hazel
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const auto path = (const wchar_t*)payload->Data;
-				OpenScene(FilePath(g_AssetsPath / path));
+ 				OpenScene(path);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -542,6 +546,26 @@ namespace Hazel
 		Renderer2D::EndScene();
 	}
 
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	void EditorLayer::OpenProject(const FilePath& path)
+	{
+		if (Project::Load(path))
+		{
+			const auto startScenePath = Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene);
+			OpenScene(startScenePath);
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		// Project::SaveActive();
+	}
+
 
 	void EditorLayer::NewScene()
 	{
@@ -566,7 +590,7 @@ namespace Hazel
 
 		if (path.extension().string() != ".hazel")
 		{
-			HZ_WARN("Could not load {0} - not a scene file", path.filename().string());
+			HZ_WARN("Could not load {0} - not a scene file", path);
 			return;
 		}
 

@@ -15,7 +15,7 @@ namespace Hazel
 		void OnImGuiRender();
 
 	private:
-		FilePath m_CurrentDirectory;
+		FilePath m_BaseDirectory, m_CurrentDirectory;
 
 		Ref<Texture2D> m_DirectoryIcon, m_FileIcon;
 	};

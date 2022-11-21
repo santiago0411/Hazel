@@ -48,7 +48,7 @@ namespace Hazel
 			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 			if (!fileData)
 			{
-				HZ_CORE_ERROR("Failed to read assembly: {0}", assemblyPath.string());
+				HZ_CORE_ERROR("Failed to read assembly: {0}", assemblyPath);
 				return nullptr;
 			}
 
@@ -73,11 +73,11 @@ namespace Hazel
 					if (pdbFileData)
 					{
 						mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), (int32_t)pdbFileData.Size());
-						HZ_CORE_INFO("Loaded PDB: {0}", pdbPath.string());
+						HZ_CORE_INFO("Loaded PDB: {0}", pdbPath);
 					}
 					else
 					{
-						HZ_CORE_WARN("Failed to load PDB: {0}", pdbPath.string());
+						HZ_CORE_WARN("Failed to load PDB: {0}", pdbPath);
 					}
 				}
 			}
@@ -86,7 +86,7 @@ namespace Hazel
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
 
-			HZ_CORE_INFO("Loaded assembly: {0}", assemblyPath.string());
+			HZ_CORE_INFO("Loaded assembly: {0}", assemblyPath);
 			return assembly;
 		}
 

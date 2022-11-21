@@ -4,6 +4,7 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 
+#include "Hazel/Project/Project.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/Components.h"
 
@@ -298,7 +299,7 @@ namespace Hazel
 			const auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
 			if (spriteRendererComponent.Texture)
-				out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath();
+				out << YAML::Key << "TexturePath" << YAML::Value << spriteRendererComponent.Texture->GetPath().string();
 
 			out << YAML::Key << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
 
@@ -365,7 +366,7 @@ namespace Hazel
 		out << YAML::EndMap; // Entity
 	}
 
-	void SceneSerializer::Serialize(const std::string& filepath)
+	void SceneSerializer::Serialize(const FilePath& filepath)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
@@ -386,18 +387,18 @@ namespace Hazel
 		fout << out.c_str();
 	}
 
-	void SceneSerializer::SerializeRuntime(const std::string& filepath)
+	void SceneSerializer::SerializeRuntime(const FilePath& filepath)
 	{
 		// NYI
 		HZ_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& filepath) const
+	bool SceneSerializer::Deserialize(const FilePath& filepath) const
 	{
 		YAML::Node data;
 		try
 		{
-			data = YAML::LoadFile(filepath);
+			data = YAML::LoadFile(filepath.string());
 		}
 		catch (YAML::ParserException& e)
 		{
@@ -513,7 +514,10 @@ namespace Hazel
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 					if (spriteRendererComponent["TexturePath"])
-						src.Texture = Texture2D::Create(spriteRendererComponent["TexturePath"].as<std::string>());
+					{
+						auto texturePath = spriteRendererComponent["TexturePath"].as<std::string>(); 
+						src.Texture = Texture2D::Create(texturePath);
+					}
 					if (spriteRendererComponent["TilingFactor"])
 						src.TilingFactor = spriteRendererComponent["TilingFactor"].as<float>();
 				}
@@ -560,7 +564,7 @@ namespace Hazel
 		return true;
 	}
 
-	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
+	bool SceneSerializer::DeserializeRuntime(const FilePath& filepath)
 	{
 		// NYI
 		HZ_CORE_ASSERT(false);
