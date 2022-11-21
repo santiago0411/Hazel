@@ -144,7 +144,12 @@ namespace Hazel
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadPending = false;
 
+		// Temp until finding out why mono release crashes
+#if defined(HZ_DEBUG)
 		bool EnableDebugging = true;
+#else
+		bool EnableDebugging = false;
+#endif
 
 		Scene* SceneContext = nullptr;
 	};
