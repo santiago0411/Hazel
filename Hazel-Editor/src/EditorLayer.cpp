@@ -15,7 +15,7 @@
 
 namespace Hazel
 {
-	extern const std::filesystem::path g_AssetsPath;
+	extern const FilePath g_AssetsPath;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
@@ -242,7 +242,7 @@ namespace Hazel
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const auto path = (const wchar_t*)payload->Data;
-				OpenScene(std::filesystem::path(g_AssetsPath / path));
+				OpenScene(FilePath(g_AssetsPath / path));
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -549,7 +549,7 @@ namespace Hazel
 		m_ActiveScene = m_EditorScene;
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-		m_ActiveScenePath = std::filesystem::path();
+		m_ActiveScenePath = FilePath();
 	}
 
 	void EditorLayer::OpenScene()
@@ -559,7 +559,7 @@ namespace Hazel
 			OpenScene(*filepath);
 	}
 
-	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	void EditorLayer::OpenScene(const FilePath& path)
 	{
 		if (m_SceneState != SceneState::Edit)
 			OnSceneStop();
@@ -599,7 +599,7 @@ namespace Hazel
 		}
 	}
 
-	void EditorLayer::SerializeScene(const std::filesystem::path& path) const
+	void EditorLayer::SerializeScene(const FilePath& path) const
 	{
 		HZ_CORE_ASSERT(!path.empty());
 

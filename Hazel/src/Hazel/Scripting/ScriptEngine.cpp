@@ -43,7 +43,7 @@ namespace Hazel
 
 	namespace Utils
 	{
-		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)
+		static MonoAssembly* LoadMonoAssembly(const FilePath& assemblyPath, bool loadPDB = false)
 		{
 			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 			if (!fileData)
@@ -64,7 +64,7 @@ namespace Hazel
 
 			if (loadPDB)
 			{
-				std::filesystem::path pdbPath = assemblyPath;
+				FilePath pdbPath = assemblyPath;
 				pdbPath.replace_extension(".pdb");
 
 				if (std::filesystem::exists(pdbPath))
@@ -131,8 +131,8 @@ namespace Hazel
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
 
-		std::filesystem::path CoreAssemblyFilepath;
-		std::filesystem::path AppAssemblyFilepath;
+		FilePath CoreAssemblyFilepath;
+		FilePath AppAssemblyFilepath;
 
 		ScriptClass EntityClass;
 
@@ -232,7 +232,7 @@ namespace Hazel
 		s_Data->RootDomain = nullptr;
 	}
 
-	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAssembly(const FilePath& filepath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain("HazelScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
@@ -251,7 +251,7 @@ namespace Hazel
 		return true;
 	}
 
-	bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAppAssembly(const FilePath& filepath)
 	{
 		s_Data->AppAssemblyFilepath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);

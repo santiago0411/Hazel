@@ -10,7 +10,7 @@
 
 namespace Hazel
 {
-	extern const std::filesystem::path g_AssetsPath;
+	extern const FilePath g_AssetsPath;
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
@@ -382,7 +382,7 @@ namespace Hazel
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
 					const auto path = (const wchar_t*)payload->Data;
-					auto texturePath = std::filesystem::path(g_AssetsPath / path);
+					auto texturePath = FilePath(g_AssetsPath / path);
 					auto texture = Texture2D::Create(texturePath.string());
 					if (texture->IsLoaded())
 						component.Texture = texture;

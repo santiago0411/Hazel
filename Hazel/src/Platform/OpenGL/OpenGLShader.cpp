@@ -96,7 +96,7 @@ namespace Hazel
 		}
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filepath)
+	OpenGLShader::OpenGLShader(const FilePath& filepath)
 		: m_FilePath(filepath)
 	{
 		HZ_PROFILE_FUNCTION();
@@ -115,11 +115,12 @@ namespace Hazel
 		}
 
 		// Extract name from filepath
-		auto lastSlash = filepath.find_last_of("/\\");
+		const auto filePathStr = filepath.string();
+		auto lastSlash = filePathStr.find_last_of("/\\");
 		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto lastDot = filepath.rfind('.');
-		auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
-		m_Name = filepath.substr(lastSlash, count);
+		auto lastDot = filePathStr.rfind('.');
+		auto count = lastDot == std::string::npos ? filePathStr.size() - lastSlash : lastDot - lastSlash;
+		m_Name = filePathStr.substr(lastSlash, count);
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -147,7 +148,7 @@ namespace Hazel
 		glDeleteProgram(m_RendererId);
 	}
 
-	std::string OpenGLShader::ReadFile(const std::string& filepath)
+	std::string OpenGLShader::ReadFile(const FilePath& filepath)
 	{
 		HZ_PROFILE_FUNCTION();
 		
@@ -212,15 +213,15 @@ namespace Hazel
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 		options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-		std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
+		FilePath cacheDirectory = Utils::GetCacheDirectory();
 
 		auto& shaderData = m_VulkanSPIRV;
 		shaderData.clear();
 
 		for (auto&& [stage, source] : shaderSources)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
-			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedVulkanFileExtension(stage));
+			FilePath shaderFilePath = m_FilePath;
+			FilePath cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedVulkanFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
 			if (in.is_open())
@@ -235,7 +236,7 @@ namespace Hazel
 			}
 			else
 			{
-				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.string().c_str(), options);
 				if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					HZ_CORE_ERROR(result.GetErrorMessage());
@@ -269,15 +270,15 @@ namespace Hazel
 		options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
 		options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-		std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
+		FilePath cacheDirectory = Utils::GetCacheDirectory();
 
 		shaderData.clear();
 		m_OpenGLSourceCode.clear();
 
 		for (auto&& [stage, spirv] : m_VulkanSPIRV)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
-			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedOpenGLFileExtension(stage));
+			FilePath shaderFilePath = m_FilePath;
+			FilePath cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedOpenGLFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
 			if (in.is_open())
@@ -296,7 +297,7 @@ namespace Hazel
 				m_OpenGLSourceCode[stage] = glslCompiler.compile();
 				auto& source = m_OpenGLSourceCode[stage];
 
-				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.string().c_str(), options);
 				if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					HZ_CORE_ERROR(result.GetErrorMessage());

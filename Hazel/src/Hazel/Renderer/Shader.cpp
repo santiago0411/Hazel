@@ -6,7 +6,7 @@
 
 namespace Hazel
 {
-	Ref<Shader> Shader::Create(const std::string& filepath)
+	Ref<Shader> Shader::Create(const FilePath& filepath)
 	{
         switch (Renderer::GetAPI())
         {
@@ -48,14 +48,14 @@ namespace Hazel
         Add(name, shader);
 	}
 
-	Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+	Ref<Shader> ShaderLibrary::Load(const FilePath& filepath)
 	{
         auto shader = Shader::Create(filepath);
         Add(shader);
         return shader;
 	}
 
-	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+	Ref<Shader> ShaderLibrary::Load(const std::string& name, const FilePath& filepath)
 	{
         auto shader = Shader::Create(filepath);
         Add(name, shader);

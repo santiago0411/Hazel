@@ -26,10 +26,10 @@ namespace Hazel
 
 		void NewScene();
 		void OpenScene();
-		void OpenScene(const std::filesystem::path& path);
+		void OpenScene(const FilePath& path);
 		void SaveScene();
 		void SaveSceneAs();
-		void SerializeScene(const std::filesystem::path& path) const;
+		void SerializeScene(const FilePath& path) const;
 
 		int32_t GetMouseOverPixelData() const;
 
@@ -46,7 +46,7 @@ namespace Hazel
 		Ref<Framebuffer> m_Framebuffer;
 		Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_EditorScene;
-		std::filesystem::path m_ActiveScenePath;
+		FilePath m_ActiveScenePath;
 		EditorCamera m_EditorCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;

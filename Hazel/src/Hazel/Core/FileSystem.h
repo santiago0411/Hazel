@@ -4,9 +4,11 @@
 
 namespace Hazel
 {
+	using FilePath = std::filesystem::path;
+
 	class FileSystem
 	{
 	public:
-		static Buffer ReadFileBinary(const std::filesystem::path& filepath);
+		static Buffer ReadFileBinary(const FilePath& filepath);
 	};
 }

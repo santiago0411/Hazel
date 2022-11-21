@@ -1,6 +1,6 @@
 #pragma once
 
-#include <filesystem>
+#include "Hazel/Core/FileSystem.h"
 
 #include "Hazel/Renderer/Texture.h"
 
@@ -15,7 +15,7 @@ namespace Hazel
 		void OnImGuiRender();
 
 	private:
-		std::filesystem::path m_CurrentDirectory;
+		FilePath m_CurrentDirectory;
 
 		Ref<Texture2D> m_DirectoryIcon, m_FileIcon;
 	};

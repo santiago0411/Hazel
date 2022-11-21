@@ -5,7 +5,7 @@
 
 namespace Hazel
 {
-	Buffer FileSystem::ReadFileBinary(const std::filesystem::path& filepath)
+	Buffer FileSystem::ReadFileBinary(const FilePath& filepath)
 	{
 		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
 

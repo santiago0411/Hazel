@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Hazel/Core/FileSystem.h"
+
 #include <glm/glm.hpp>
 
 namespace Hazel
@@ -22,7 +24,7 @@ namespace Hazel
 		
 		virtual const std::string& GetName() const = 0;
 		
-		static Ref<Shader> Create(const std::string& filepath);
+		static Ref<Shader> Create(const FilePath& filepath);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 	};
 
@@ -31,8 +33,8 @@ namespace Hazel
 	public:
 		void Add(const std::string& name, const Ref<Shader>& shader);
 		void Add(const Ref<Shader>& shader);
-		Ref<Shader> Load(const std::string& filepath);
-		Ref<Shader> Load(const std::string& name, const std::string& filepath);
+		Ref<Shader> Load(const FilePath& filepath);
+		Ref<Shader> Load(const std::string& name, const FilePath& filepath);
 
 		Ref<Shader> Get(const std::string& name);
 

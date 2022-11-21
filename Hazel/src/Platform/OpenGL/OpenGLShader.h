@@ -10,7 +10,7 @@ namespace Hazel
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(const std::string& filepath);
+		OpenGLShader(const FilePath& filepath);
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		~OpenGLShader() override;
 
@@ -38,7 +38,7 @@ namespace Hazel
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) const;
 
 	private:
-		static std::string ReadFile(const std::string& filepath);
+		static std::string ReadFile(const FilePath& filepath);
 		static std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 
 		void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
@@ -48,7 +48,7 @@ namespace Hazel
 	
 	private:
 		uint32_t m_RendererId;
-		std::string m_FilePath;
+		FilePath m_FilePath;
 		std::string m_Name;
 
 		std::unordered_map<GLenum, std::vector<uint32_t>> m_VulkanSPIRV;

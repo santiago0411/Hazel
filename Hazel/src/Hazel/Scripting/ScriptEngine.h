@@ -1,6 +1,7 @@
 #pragma once
 
-#include <filesystem>
+#include "Hazel/Core/FileSystem.h"
+
 #include <map>
 
 extern "C" {
@@ -137,8 +138,8 @@ namespace Hazel
 		static void Init();
 		static void Shutdown();
 
-		static bool LoadAssembly(const std::filesystem::path& filepath);
-		static bool LoadAppAssembly(const std::filesystem::path& filepath);
+		static bool LoadAssembly(const FilePath& filepath);
+		static bool LoadAppAssembly(const FilePath& filepath);
 
 		static void ReloadAssembly();
 
