@@ -25,6 +25,7 @@ namespace Hazel
 		void OnOverlayRender();
 
 		void NewProject();
+		bool OpenProject();
 		void OpenProject(const FilePath& path);
 		void SaveProject();
 

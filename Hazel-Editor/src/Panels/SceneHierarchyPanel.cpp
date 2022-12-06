@@ -7,6 +7,7 @@
 
 #include "Hazel/Scene/Components.h"
 #include "Hazel/Scripting/ScriptEngine.h"
+#include "Hazel/UI/UI.h"
 
 namespace Hazel
 {
@@ -300,11 +301,13 @@ namespace Hazel
 			static char buffer[64] = { 0 };
 			strcpy_s(buffer, component.ClassName.c_str());
 
-			if (!scriptClassExists)
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+			UI::ScopedStyleColor textColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f), !scriptClassExists);
 
 			if (ImGui::InputText("Class", buffer, sizeof buffer))
+			{
 				component.ClassName = buffer;
+				return;
+			}
 
 			// Fields
 			bool sceneRunning = m_Context->IsRunning();
@@ -365,9 +368,6 @@ namespace Hazel
 
 				}
 			}
-
-			if (!scriptClassExists)
-				ImGui::PopStyleColor();
 		});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& component)

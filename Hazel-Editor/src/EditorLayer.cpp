@@ -49,7 +49,9 @@ namespace Hazel
 		}
 		else
 		{
-			NewProject();
+			// NewProject();
+			if (!OpenProject())
+				Application::Get().Close();
 		}
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);  
@@ -178,17 +180,21 @@ namespace Hazel
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
+				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+					OpenProject();
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 					NewScene();
 
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-					OpenScene();
-
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 					SaveScene();
 
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
 					SaveSceneAs();
+
+				ImGui::Separator();
 
 				if (ImGui::MenuItem("Exit")) 
 					Application::Get().Close();
@@ -411,7 +417,7 @@ namespace Hazel
 			case Key::O:
 			{
 				if (control)
-					OpenScene();
+					OpenProject();
 				break;
 			}
 			case Key::S:
@@ -551,6 +557,16 @@ namespace Hazel
 		Project::New();
 	}
 
+	bool EditorLayer::OpenProject()
+	{
+		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Proyect (*.hproj)\0*.hproj\0");
+		if (!filepath)
+			return false;
+
+		OpenProject(*filepath);
+		return true;
+	}
+
 	void EditorLayer::OpenProject(const FilePath& path)
 	{
 		if (Project::Load(path))
@@ -592,11 +608,11 @@ namespace Hazel
 		{
 			HZ_WARN("Could not load {0} - not a scene file", path);
 			return;
-		}
+		} 
 
 		auto newScene = CreateRef<Scene>();
 		SceneSerializer serializer(newScene);
-		if (serializer.Deserialize(path.string()))
+		if (serializer.Deserialize(path))
 		{
 			m_EditorScene = newScene;
 			m_ActiveScene = m_EditorScene;
@@ -628,7 +644,7 @@ namespace Hazel
 		HZ_CORE_ASSERT(!path.empty());
 
 		SceneSerializer serializer(m_ActiveScene);
-		serializer.Serialize(path.string());
+		serializer.Serialize(path);
 	}
 
 	int32_t EditorLayer::GetMouseOverPixelData() const
