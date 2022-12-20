@@ -15,6 +15,12 @@ extern "C" {
 
 namespace Hazel
 {
+	struct ScriptEngineConfig
+	{
+		FilePath CoreAssemblyPath;
+		bool EnableDebugging;
+	};
+
 	constexpr uint8_t MAX_SCRIPT_FIELD_BUFFER_SIZE = 16;
 
 	enum class ScriptFieldType
@@ -138,8 +144,8 @@ namespace Hazel
 		static void Init();
 		static void Shutdown();
 
-		static bool LoadAssembly(const FilePath& filepath);
-		static bool LoadAppAssembly(const FilePath& filepath);
+		static bool LoadCoreAssembly();
+		static bool LoadAppAssembly();
 
 		static void ReloadAssembly();
 

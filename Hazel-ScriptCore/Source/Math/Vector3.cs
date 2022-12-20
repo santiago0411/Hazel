@@ -79,6 +79,12 @@ namespace Hazel
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float LengthSquared()
+        {
+            return X * X + Y * Y + Z * Z;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float Length()
         {
             return (float) Math.Sqrt(X * X + Y * Y + Z * Z);

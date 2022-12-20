@@ -104,6 +104,15 @@ namespace Hazel
 		body->ApplyForceToCenter(b2Vec2(impulse->x, impulse->y), wake);
 	}
 
+	static void RigidBody2DComponent_GetLinearVelocity(uint64_t entityId, glm::vec2* outLinearVelocity)
+	{
+		Entity entity = GetEntity(entityId);
+		const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+		auto* body = (b2Body*)rb2d.RuntimeBody;
+		const b2Vec2& lv = body->GetLinearVelocity();
+		*outLinearVelocity = glm::vec2(lv.x, lv.y);
+	}
+
 	static void SpriteRendererComponent_GetColor(uint64_t entityId, glm::vec4* outColor)
 	{
 		*outColor = GetEntity(entityId).GetComponent<SpriteRendererComponent>().Color;
@@ -151,23 +160,24 @@ namespace Hazel
 
 	void ScriptRegistry::RegisterMethods()
 	{
-		HZ_ADD_INTERNAL_CALL(Entity_HasComponent);
-		HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName);
-		HZ_ADD_INTERNAL_CALL(GetScriptInstance);
+		HZ_ADD_INTERNAL_CALL(Entity_HasComponent)
+		HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName)
+		HZ_ADD_INTERNAL_CALL(GetScriptInstance)
 
-		HZ_ADD_INTERNAL_CALL(TransformComponent_GetPosition);
-		HZ_ADD_INTERNAL_CALL(TransformComponent_SetPosition);
-		HZ_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
-		HZ_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
-		HZ_ADD_INTERNAL_CALL(TransformComponent_GetScale);
-		HZ_ADD_INTERNAL_CALL(TransformComponent_SetScale);
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetPosition)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetPosition)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetRotation)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetRotation)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetScale)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetScale)
 
-		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse);
-		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity)
 
-		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_GetColor);
-		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_SetColor);
+		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_GetColor)
+		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_SetColor)
 
-		HZ_ADD_INTERNAL_CALL(Input_IsKeyDown);
+		HZ_ADD_INTERNAL_CALL(Input_IsKeyDown)
 	}
 }

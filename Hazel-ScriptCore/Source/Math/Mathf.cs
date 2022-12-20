@@ -28,5 +28,15 @@
                 return 1F;
             return value;
         }
+
+        public static float Lerp(float a, float b, float c)
+        {
+            return a + (b - a) * Clamp01(c);
+        }
+
+        public static float LerpUnclamped(float a, float b, float t)
+        {
+            return a + (b - a) * t;
+        }
     }
 }

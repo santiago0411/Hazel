@@ -240,7 +240,7 @@ namespace Hazel
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportHovered);
-		
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
@@ -470,6 +470,19 @@ namespace Hazel
 				}
 				break;
 			}
+			case Key::Delete:
+			{
+				if (Application::Get().GetImGuiLayer()->GetActiveWidgetId() == 0)
+				{
+					Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+					if (selectedEntity)
+					{
+						m_SceneHierarchyPanel.SetSelectedEntity({});
+						m_ActiveScene->DestroyEntity(selectedEntity);
+					}
+				}
+				break;
+			}
 		}
 
 		return false;
@@ -571,6 +584,12 @@ namespace Hazel
 	{
 		if (Project::Load(path))
 		{
+			auto appAssemblyPath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+			if (!appAssemblyPath.empty() && std::filesystem::exists(appAssemblyPath))
+				ScriptEngine::LoadAppAssembly();
+			else
+				HZ_WARN("Current project does not have a C# assembly or it was not found.");
+
 			const auto startScenePath = Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene);
 			OpenScene(startScenePath);
 			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
@@ -724,6 +743,9 @@ namespace Hazel
 
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity)
-			m_EditorScene->DuplicateEntity(selectedEntity);
+		{
+			Entity newEntity = m_EditorScene->DuplicateEntity(selectedEntity);
+			m_SceneHierarchyPanel.SetSelectedEntity(newEntity);
+		}
 	}
 }

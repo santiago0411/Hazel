@@ -129,16 +129,17 @@ namespace Hazel
 		return entity;
 	}
 
-	void Scene::DuplicateEntity(Entity entity)
+	Entity Scene::DuplicateEntity(Entity entity)
 	{
 		Entity newEntity = CreateEntity(entity.GetName());
 		CopyAllExistingComponents(newEntity, entity);
+		return newEntity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
-		m_Registry.destroy(entity);
 		m_EntityMap.erase(entity.GetUUID());
+		m_Registry.destroy(entity);
 	}
 
 	void Scene::OnRuntimeStart()

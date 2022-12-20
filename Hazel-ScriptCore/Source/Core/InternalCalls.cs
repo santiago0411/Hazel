@@ -38,6 +38,9 @@ namespace Hazel
         internal static extern void RigidBody2DComponent_ApplyLinearImpulseToCenter(ulong entityId, ref Vector2 impulse, bool wake);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void RigidBody2DComponent_GetLinearVelocity(ulong entityId, out Vector2 linearVelocity);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void SpriteRendererComponent_GetColor(ulong entityId, out Color color);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
