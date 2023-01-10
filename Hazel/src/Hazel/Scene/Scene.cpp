@@ -9,6 +9,8 @@
 
 #include "Hazel/Renderer/Renderer2D.h"
 
+#include "Hazel/Physics/Physics2D.h"
+
 #include <box2d/b2_world.h>
 #include <box2d/b2_body.h>
 #include <box2d/b2_fixture.h>
@@ -17,19 +19,6 @@
 
 namespace Hazel
 {
-	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
-	{
-		switch (bodyType)
-		{
-			case RigidBody2DComponent::BodyType::Static:	return b2_staticBody;
-			case RigidBody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
-			case RigidBody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
-		}
-
-		HZ_CORE_ASSERT(false, "Unknown body type!");
-		return b2_staticBody;
-	}
-
 	template<typename ... Component>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, EntityId>& enttMap)
 	{
@@ -341,7 +330,7 @@ namespace Hazel
 			auto& transform = entity.GetComponent<TransformComponent>();
 
 			b2BodyDef bodyDef;
-			bodyDef.type = RigidBody2DTypeToBox2DBody(rbc.Type);
+			bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rbc.Type);
 			bodyDef.position.Set(transform.Position.x, transform.Position.y);
 			bodyDef.angle = transform.Rotation.z;
 
