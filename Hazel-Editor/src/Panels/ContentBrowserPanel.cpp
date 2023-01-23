@@ -1,15 +1,15 @@
 #include "ContentBrowserPanel.h"
 
+#include "Hazel/Project/Project.h"
+
 #include <imgui/imgui.h>
 
 namespace Hazel
 {
 	namespace Fs = std::filesystem;
 
-	extern const Fs::path g_AssetsPath = "assets";
-
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_CurrentDirectory(g_AssetsPath)
+		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_DirectoryIcon = Texture2D::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon = Texture2D::Create("Resources/Icons/ContentBrowser/FileIcon.png");
@@ -19,7 +19,7 @@ namespace Hazel
 	{
 		ImGui::Begin("Content Browser");
 
-		if (m_CurrentDirectory != g_AssetsPath)
+		if (m_CurrentDirectory != m_BaseDirectory)
 			if (ImGui::Button("<-"))
 				m_CurrentDirectory = m_CurrentDirectory.parent_path();
 
@@ -46,8 +46,7 @@ namespace Hazel
 
 			if (ImGui::BeginDragDropSource())
 			{
-				auto relativePath = Fs::relative(path, g_AssetsPath);
-				const wchar_t* itemPath = relativePath.c_str();
+				const wchar_t* itemPath = path.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 				ImGui::EndDragDropSource();
 			}

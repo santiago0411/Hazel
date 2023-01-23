@@ -23,7 +23,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 project "Sandbox"
 	kind "SharedLib"
 	language "C#"
-	dotnetframework "4.7.2"
+	dotnetframework "4.8"
 	namespace "Hazel"
 
 	targetdir ("Binaries")

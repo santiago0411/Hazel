@@ -48,6 +48,26 @@ namespace Hazel
 
     public class RigidBody2DComponent : Component
     {
+        public enum BodyType { Static = 0, Dynamic, Kinematic }
+
+        public Vector2 LinearVelocity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                InternalCalls.RigidBody2DComponent_GetLinearVelocity(Entity.Id, out Vector2 linearVelocity);
+                return linearVelocity;
+            }
+        }
+
+        public BodyType Type
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => InternalCalls.RigidBody2DComponent_GetType(Entity.Id);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => InternalCalls.RigidBody2DComponent_SetType(Entity.Id, value);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 worldPosition, bool wake = true)
         {

@@ -2,6 +2,8 @@
 
 #include "Hazel/Core/Buffer.h"
 
+#include <filesystem>
+
 namespace Hazel
 {
 	using FilePath = std::filesystem::path;

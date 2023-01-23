@@ -44,11 +44,17 @@ namespace Hazel
 		auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
 		if (commandLineArgs.Count > 1)
 		{
-			auto sceneFilePath = commandLineArgs[1];
-			OpenScene(sceneFilePath);
+			auto projectFilePath = commandLineArgs[1];
+			OpenProject(projectFilePath);
+		}
+		else
+		{
+			// NewProject();
+			if (!OpenProject())
+				Application::Get().Close();
 		}
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);  
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		Renderer2D::SetLineWidth(4.0f);
@@ -174,17 +180,21 @@ namespace Hazel
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
+				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+					OpenProject();
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 					NewScene();
 
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-					OpenScene();
-
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 					SaveScene();
 
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
 					SaveSceneAs();
+
+				ImGui::Separator();
 
 				if (ImGui::MenuItem("Exit")) 
 					Application::Get().Close();
@@ -204,7 +214,7 @@ namespace Hazel
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Renderer2D Stats");
 		auto stats = Renderer2D::GetStats();
@@ -230,7 +240,7 @@ namespace Hazel
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportHovered);
-		
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
@@ -242,7 +252,7 @@ namespace Hazel
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const auto path = (const wchar_t*)payload->Data;
-				OpenScene(FilePath(g_AssetsPath / path));
+ 				OpenScene(path);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -407,7 +417,7 @@ namespace Hazel
 			case Key::O:
 			{
 				if (control)
-					OpenScene();
+					OpenProject();
 				break;
 			}
 			case Key::S:
@@ -457,6 +467,19 @@ namespace Hazel
 				{
 					if (!ImGuizmo::IsUsing())
 						m_GizmoType = ImGuizmo::OPERATION::SCALE;
+				}
+				break;
+			}
+			case Key::Delete:
+			{
+				if (Application::Get().GetImGuiLayer()->GetActiveWidgetId() == 0)
+				{
+					Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+					if (selectedEntity)
+					{
+						m_SceneHierarchyPanel.SetSelectedEntity({});
+						m_ActiveScene->DestroyEntity(selectedEntity);
+					}
 				}
 				break;
 			}
@@ -542,6 +565,42 @@ namespace Hazel
 		Renderer2D::EndScene();
 	}
 
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	bool EditorLayer::OpenProject()
+	{
+		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Proyect (*.hproj)\0*.hproj\0");
+		if (!filepath)
+			return false;
+
+		OpenProject(*filepath);
+		return true;
+	}
+
+	void EditorLayer::OpenProject(const FilePath& path)
+	{
+		if (Project::Load(path))
+		{
+			auto appAssemblyPath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+			if (!appAssemblyPath.empty() && std::filesystem::exists(appAssemblyPath))
+				ScriptEngine::LoadAppAssembly();
+			else
+				HZ_WARN("Current project does not have a C# assembly or it was not found.");
+
+			const auto startScenePath = Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene);
+			OpenScene(startScenePath);
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		// Project::SaveActive();
+	}
+
 
 	void EditorLayer::NewScene()
 	{
@@ -566,13 +625,13 @@ namespace Hazel
 
 		if (path.extension().string() != ".hazel")
 		{
-			HZ_WARN("Could not load {0} - not a scene file", path.filename().string());
+			HZ_WARN("Could not load {0} - not a scene file", path);
 			return;
-		}
+		} 
 
 		auto newScene = CreateRef<Scene>();
 		SceneSerializer serializer(newScene);
-		if (serializer.Deserialize(path.string()))
+		if (serializer.Deserialize(path))
 		{
 			m_EditorScene = newScene;
 			m_ActiveScene = m_EditorScene;
@@ -604,7 +663,7 @@ namespace Hazel
 		HZ_CORE_ASSERT(!path.empty());
 
 		SceneSerializer serializer(m_ActiveScene);
-		serializer.Serialize(path.string());
+		serializer.Serialize(path);
 	}
 
 	int32_t EditorLayer::GetMouseOverPixelData() const
@@ -684,6 +743,9 @@ namespace Hazel
 
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity)
-			m_EditorScene->DuplicateEntity(selectedEntity);
+		{
+			Entity newEntity = m_EditorScene->DuplicateEntity(selectedEntity);
+			m_SceneHierarchyPanel.SetSelectedEntity(newEntity);
+		}
 	}
 }

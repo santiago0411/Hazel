@@ -1,7 +1,7 @@
 project "Hazel-ScriptCore"
 	kind "SharedLib"
 	language "C#"
-	dotnetframework "4.7.2"
+	dotnetframework "4.8"
 	namespace "Hazel"
 
 	targetdir ("../Hazel-Editor/Resources/Scripts")

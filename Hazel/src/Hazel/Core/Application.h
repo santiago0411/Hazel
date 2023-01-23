@@ -3,11 +3,10 @@
 #include "Hazel/Core/Base.h"
 #include "Hazel/Core/LayerStack.h"
 #include "Hazel/Core/Window.h"
-
 #include "Hazel/Events/ApplicationEvent.h"
 #include "Hazel/Events/Event.h"
-
 #include "Hazel/ImGui/ImGuiLayer.h"
+#include "Hazel/Scripting/ScriptEngine.h"
 
 int main(int argc, char** argv);
 
@@ -29,6 +28,7 @@ namespace Hazel
 	{
 		std::string Name = "Hazel Application";
 		std::string WorkingDirectory;
+		ScriptEngineConfig ScriptEngineConfig;
 		ApplicationCommandLineArgs CommandLineArgs;
 	};
 

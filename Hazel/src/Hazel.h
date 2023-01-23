@@ -15,14 +15,17 @@
 #include "Hazel/Core/Input.h"
 #include "Hazel/Core/KeyCodes.h"
 #include "Hazel/Core/MouseCodes.h"
-#include "Hazel/Renderer/OrthographicCameraController.h"
 
 #include "Hazel/ImGui/ImGuiLayer.h"
+
+#include "Hazel/Project/Project.h"
 
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/ScriptableEntity.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scene/Components.h"
+
+#include "Hazel/UI/UI.h"
 
 // --- Renderer --------
 #include "Hazel/Renderer/Renderer.h"
@@ -38,4 +41,5 @@
 
 #include "Hazel/Renderer/EditorCamera.h"
 #include "Hazel/Renderer/OrthographicCamera.h"
+#include "Hazel/Renderer/OrthographicCameraController.h"
 // ---------------------

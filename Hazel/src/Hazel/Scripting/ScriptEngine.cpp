@@ -3,6 +3,7 @@
 
 #include "Hazel/Core/Application.h"
 #include "Hazel/Core/FileSystem.h"
+#include "Hazel/Project/Project.h"
 #include "Hazel/Scene/Entity.h"
 #include "Hazel/Scene/Scene.h"
 #include "Hazel/Scripting/ScriptRegistry.h"
@@ -48,7 +49,7 @@ namespace Hazel
 			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 			if (!fileData)
 			{
-				HZ_CORE_ERROR("Failed to read assembly: {0}", assemblyPath.string());
+				HZ_CORE_ERROR("Failed to read assembly: {0}", assemblyPath);
 				return nullptr;
 			}
 
@@ -73,11 +74,11 @@ namespace Hazel
 					if (pdbFileData)
 					{
 						mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), (int32_t)pdbFileData.Size());
-						HZ_CORE_INFO("Loaded PDB: {0}", pdbPath.string());
+						HZ_CORE_INFO("Loaded PDB: {0}", pdbPath);
 					}
 					else
 					{
-						HZ_CORE_WARN("Failed to load PDB: {0}", pdbPath.string());
+						HZ_CORE_WARN("Failed to load PDB: {0}", pdbPath);
 					}
 				}
 			}
@@ -86,7 +87,7 @@ namespace Hazel
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
 
-			HZ_CORE_INFO("Loaded assembly: {0}", assemblyPath.string());
+			HZ_CORE_INFO("Loaded assembly: {0}", assemblyPath);
 			return assembly;
 		}
 
@@ -131,9 +132,6 @@ namespace Hazel
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
 
-		FilePath CoreAssemblyFilepath;
-		FilePath AppAssemblyFilepath;
-
 		ScriptClass EntityClass;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
@@ -145,6 +143,7 @@ namespace Hazel
 		bool AssemblyReloadPending = false;
 
 		// Temp until finding out why mono release crashes
+		// TODO should be read from the config
 #if defined(HZ_DEBUG)
 		bool EnableDebugging = true;
 #else
@@ -173,21 +172,8 @@ namespace Hazel
 	void ScriptEngine::Init()
 	{
 		s_Data = new ScriptEngineData;
-
 		InitMono();
-		ScriptRegistry::RegisterMethods();
-
-		if (!LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll"))
-			return;
-
-		if (!LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll"))
-			return;
-
-		LoadAssemblyClasses();
-		ScriptRegistry::RegisterComponents();
-
-		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
-		s_Data->EntityClass = ScriptClass(entityMonoClass);
+		LoadCoreAssembly();
 	}
 
 	void ScriptEngine::Shutdown()
@@ -232,13 +218,17 @@ namespace Hazel
 		s_Data->RootDomain = nullptr;
 	}
 
-	bool ScriptEngine::LoadAssembly(const FilePath& filepath)
+	bool ScriptEngine::LoadCoreAssembly()
 	{
+		mono_domain_set(mono_get_root_domain(), false);
+		if (s_Data->AppDomain)
+			mono_domain_unload(s_Data->AppDomain);
+
 		s_Data->AppDomain = mono_domain_create_appdomain("HazelScriptRuntime", nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
-		s_Data->CoreAssemblyFilepath = filepath;
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+		const FilePath& path = Application::Get().GetSpecification().ScriptEngineConfig.CoreAssemblyPath;
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path, s_Data->EnableDebugging);
 		if (!s_Data->CoreAssembly)
 		{
 			HZ_CORE_ERROR("Could not load Hazel-ScriptCore assembly.");
@@ -251,10 +241,10 @@ namespace Hazel
 		return true;
 	}
 
-	bool ScriptEngine::LoadAppAssembly(const FilePath& filepath)
+	bool ScriptEngine::LoadAppAssembly()
 	{
-		s_Data->AppAssemblyFilepath = filepath;
-		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+		const FilePath assemblyPath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(assemblyPath, s_Data->EnableDebugging);
 		if (!s_Data->AppAssembly)
 		{
 			HZ_CORE_ERROR("Could not load app assembly.");
@@ -264,7 +254,14 @@ namespace Hazel
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 		// Utils::PrintAssemblyTypes(s_Data->AppAssembly);
 
-		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
+		LoadAssemblyClasses();
+		ScriptRegistry::RegisterComponents();
+		ScriptRegistry::RegisterMethods();
+
+		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
+		s_Data->EntityClass = ScriptClass(entityMonoClass);
+
+		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(assemblyPath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadPending = false;
 
 		return true;
@@ -274,20 +271,11 @@ namespace Hazel
 	{
 		HZ_CORE_INFO("Reloading assemblies.");
 
-		mono_domain_set(mono_get_root_domain(), false);
-		mono_domain_unload(s_Data->AppDomain);
-
-		if (!LoadAssembly(s_Data->CoreAssemblyFilepath))
+		if (!LoadCoreAssembly())
 			return;
 
-		if (!LoadAppAssembly(s_Data->AppAssemblyFilepath))
+		if (!LoadAppAssembly())
 			return;
-
-		LoadAssemblyClasses();
-		ScriptRegistry::RegisterComponents();
-
-		MonoClass* entityMonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");
-		s_Data->EntityClass = ScriptClass(entityMonoClass);
 	}
 
 	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)

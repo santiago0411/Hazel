@@ -1,6 +1,7 @@
 # Binaries
 **/bin/
 bin-int/
+Binaries/
 Intermediates/
 
 # Hazel files

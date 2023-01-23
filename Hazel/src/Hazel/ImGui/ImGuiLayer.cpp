@@ -5,6 +5,7 @@
 #include <examples/imgui_impl_opengl3.h>
 
 #include <ImGuizmo.h>
+#include <imgui_internal.h>
 
 #include "Hazel/Core/Application.h"
 
@@ -110,6 +111,11 @@ namespace Hazel
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
+	}
+
+	uint32_t ImGuiLayer::GetActiveWidgetId() const
+	{
+		return GImGui->ActiveId;
 	}
 
 	void ImGuiLayer::SetDarkThemeColors()

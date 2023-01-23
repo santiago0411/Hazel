@@ -7,11 +7,10 @@
 
 #include "Hazel/Scene/Components.h"
 #include "Hazel/Scripting/ScriptEngine.h"
+#include "Hazel/UI/UI.h"
 
 namespace Hazel
 {
-	extern const FilePath g_AssetsPath;
-
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -302,11 +301,13 @@ namespace Hazel
 			static char buffer[64] = { 0 };
 			strcpy_s(buffer, component.ClassName.c_str());
 
-			if (!scriptClassExists)
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+			UI::ScopedStyleColor textColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f), !scriptClassExists);
 
 			if (ImGui::InputText("Class", buffer, sizeof buffer))
+			{
 				component.ClassName = buffer;
+				return;
+			}
 
 			// Fields
 			bool sceneRunning = m_Context->IsRunning();
@@ -367,9 +368,6 @@ namespace Hazel
 
 				}
 			}
-
-			if (!scriptClassExists)
-				ImGui::PopStyleColor();
 		});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& component)
@@ -381,13 +379,12 @@ namespace Hazel
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
-					const auto path = (const wchar_t*)payload->Data;
-					auto texturePath = FilePath(g_AssetsPath / path);
-					auto texture = Texture2D::Create(texturePath.string());
+					const FilePath path = (const wchar_t*)payload->Data;
+					auto texture = Texture2D::Create(path);
 					if (texture->IsLoaded())
 						component.Texture = texture;
 					else
-						HZ_WARN("Could not load texture {0}", texturePath.filename().string());
+						HZ_WARN("Could not load texture {0}", path);
 				}
 				ImGui::EndDragDropTarget();
 			}

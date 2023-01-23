@@ -21,7 +21,7 @@ namespace Hazel
         return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path)
+	Ref<Texture2D> Texture2D::Create(const FilePath& path)
 	{
         switch (Renderer::GetAPI())
         {

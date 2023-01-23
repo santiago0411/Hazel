@@ -24,6 +24,11 @@ namespace Hazel
 
 		void OnOverlayRender();
 
+		void NewProject();
+		bool OpenProject();
+		void OpenProject(const FilePath& path);
+		void SaveProject();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const FilePath& path);
@@ -59,7 +64,7 @@ namespace Hazel
 
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
-		ContentBrowserPanel m_ContentBrowserPanel;
+		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 
 		// Editor resources
 		enum class SceneState

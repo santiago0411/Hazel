@@ -6,9 +6,15 @@
 #include <glm/gtx/string_cast.hpp>
 
 #pragma warning(push, 0)
+#include <filesystem>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
 #pragma warning(pop)
+
+namespace std::filesystem
+{
+	class path;
+}
 
 namespace Hazel
 {
@@ -59,6 +65,18 @@ struct fmt::formatter<glm::qua<T, Q>> {
 	template <typename FormatContext>
 	auto format(const glm::qua<T, Q>& quaternion, FormatContext& ctx) -> decltype(ctx.out()) {
 		return format_to(ctx.out(), glm::to_string(quaternion));
+	}
+};
+
+template<>
+struct fmt::formatter<std::filesystem::path> : formatter<std::string_view> {
+	constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
+
+	template <typename FormatContext>
+	auto format(const std::filesystem::path& path, FormatContext& ctx) -> decltype(ctx.out()) {
+		return formatter<std::string_view>::format(path.string(), ctx);
 	}
 };
 

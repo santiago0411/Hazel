@@ -1,5 +1,16 @@
 Scene: Untitled
 Entities:
+  - Entity: 377796241538368803
+    TagComponent:
+      Tag: Fountain
+    TransformComponent:
+      Position: [1, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      TexturePath: SandboxProject\Assets\Textures\Fountain.png
+      TilingFactor: 1
   - Entity: 7459096436292221725
     TagComponent:
       Tag: Camera
@@ -27,5 +38,5 @@ Entities:
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [0.999989986, 1, 0.999989986, 1]
-      TexturePath: assets\textures\Checkerboard.png
+      TexturePath: SandboxProject\Assets\Textures\Checkerboard.png
       TilingFactor: 2

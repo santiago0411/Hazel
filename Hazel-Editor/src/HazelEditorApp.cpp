@@ -23,6 +23,9 @@ namespace Hazel
 		spec.Name = "Hazel Editor";
 		spec.CommandLineArgs = args;
 
+		spec.ScriptEngineConfig.CoreAssemblyPath = "Resources/Scripts/Hazel-ScriptCore.dll";
+		spec.ScriptEngineConfig.EnableDebugging = true;
+
 		return new HazelEditor(spec);
 	}
 }
