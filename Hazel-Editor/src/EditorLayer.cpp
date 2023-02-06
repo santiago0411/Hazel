@@ -12,14 +12,17 @@
 #include "Hazel/Utils/PlatformUtils.h"
 
 #include "Hazel/Math/Math.h"
+#include "Hazel/Renderer/Font.h"
 
 namespace Hazel
 {
-	extern const FilePath g_AssetsPath;
+	// extern const FilePath g_AssetsPath;
+	static Font* s_Font;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
+		s_Font = new Font("assets/fonts/opensans/OpenSans-Regular.ttf");
 	}
 
 	void EditorLayer::OnAttach()
@@ -227,6 +230,7 @@ namespace Hazel
 
 		ImGui::Begin("Settings");
 		ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders);
+		ImGui::Image((ImTextureID)s_Font->GetAtlasTexture()->GetRendererId(), { 512, 512 }, { 0, 1 }, { 1, 0 });
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });

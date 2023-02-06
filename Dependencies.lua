@@ -3,20 +3,22 @@
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["stb_image"]		= "%{wks.location}/Hazel/vendor/stb_image"
-IncludeDir["yaml_cpp"]		= "%{wks.location}/Hazel/vendor/yaml-cpp/include"
-IncludeDir["GLFW"]			= "%{wks.location}/Hazel/vendor/GLFW/include"
-IncludeDir["Glad"]			= "%{wks.location}/Hazel/vendor/Glad/include"
-IncludeDir["ImGui"]			= "%{wks.location}/Hazel/vendor/ImGui"
-IncludeDir["ImGuizmo"]		= "%{wks.location}/Hazel/vendor/ImGuizmo"
-IncludeDir["glm"]			= "%{wks.location}/Hazel/vendor/glm"
-IncludeDir["entt"]			= "%{wks.location}/Hazel/vendor/entt/include"
-IncludeDir["mono"]			= "%{wks.location}/Hazel/vendor/mono/include"
-IncludeDir["shaderc"]		= "%{wks.location}/Hazel/vendor/shaderc/include"
-IncludeDir["SPIRV_Cross"]	= "%{wks.location}/Hazel/vendor/SPIRV-Cross"
-IncludeDir["VulkanSDK"]		= "%{VULKAN_SDK}/Include"
-IncludeDir["Box2D"]			= "%{wks.location}/Hazel/vendor/Box2D/include"
-IncludeDir["filewatch"]		= "%{wks.location}/Hazel/vendor/filewatch"
+IncludeDir["stb_image"]			= "%{wks.location}/Hazel/vendor/stb_image"
+IncludeDir["yaml_cpp"]			= "%{wks.location}/Hazel/vendor/yaml-cpp/include"
+IncludeDir["GLFW"]				= "%{wks.location}/Hazel/vendor/GLFW/include"
+IncludeDir["Glad"]				= "%{wks.location}/Hazel/vendor/Glad/include"
+IncludeDir["ImGui"]				= "%{wks.location}/Hazel/vendor/ImGui"
+IncludeDir["ImGuizmo"]			= "%{wks.location}/Hazel/vendor/ImGuizmo"
+IncludeDir["glm"]				= "%{wks.location}/Hazel/vendor/glm"
+IncludeDir["entt"]				= "%{wks.location}/Hazel/vendor/entt/include"
+IncludeDir["mono"]				= "%{wks.location}/Hazel/vendor/mono/include"
+IncludeDir["shaderc"]			= "%{wks.location}/Hazel/vendor/shaderc/include"
+IncludeDir["SPIRV_Cross"]		= "%{wks.location}/Hazel/vendor/SPIRV-Cross"
+IncludeDir["VulkanSDK"]			= "%{VULKAN_SDK}/Include"
+IncludeDir["Box2D"]				= "%{wks.location}/Hazel/vendor/Box2D/include"
+IncludeDir["filewatch"]			= "%{wks.location}/Hazel/vendor/filewatch"
+IncludeDir["msdfgen"]			= "%{wks.location}/Hazel/vendor/msdf-atlas-gen/msdfgen"
+IncludeDir["msdf_atlas_gen"]	= "%{wks.location}/Hazel/vendor/msdf-atlas-gen/msdf-atlas-gen"
 
 LibraryDir = {}
 

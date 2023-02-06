@@ -185,7 +185,7 @@ namespace Hazel
 			s_Data->LineVertexBufferBase = new LineVertex[Renderer2DData::MAX_VERTICES];
 		}
 
-		s_Data->WhiteTexture = Texture2D::Create(1, 1);
+		s_Data->WhiteTexture = Texture2D::Create(TextureSpecification());
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data->WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 		
