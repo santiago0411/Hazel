@@ -6,14 +6,10 @@
 #include "FontGeometry.h"
 #include "GlyphGeometry.h"
 
+#include "Hazel/Renderer/MSDFData.h"
+
 namespace Hazel
 {
-	struct MSDFData
-	{
-		std::vector<msdf_atlas::GlyphGeometry> Glyphs;
-		msdf_atlas::FontGeometry FontGeometry;
-	};
-
 	struct CharsetRange
 	{
 		uint32_t Begin, End;
@@ -75,7 +71,7 @@ namespace Hazel
 
 		double emSize = 40.0;
 		msdf_atlas::TightAtlasPacker atlasPacker;
-		atlasPacker.setPixelRange(2.0);
+		atlasPacker.setPixelRange(2.0); 
 		atlasPacker.setMiterLimit(1.0);
 		atlasPacker.setPadding(0);
 		atlasPacker.setScale(emSize);
@@ -86,6 +82,34 @@ namespace Hazel
 		atlasPacker.getDimensions(width, height);
 		emSize = atlasPacker.getScale();
 
+		// if MSDF || MTSDF
+		// From msdf-atlas-gen/main.cpp
+
+#define DEFAULT_ANGLE_THRESHOLD 3.0
+#define LCG_MULTIPLIER 6364136223846793005ull
+#define LCG_INCREMENT 1442695040888963407ull
+#define THREAD_COUNT 8
+
+		uint64_t coloringSeed = 0;
+		const bool expensiveColoring = true;
+		if (expensiveColoring) 
+		{
+			msdf_atlas::Workload([&glyphs = m_Data->Glyphs, &coloringSeed](int i, int threadNo) -> bool {
+				unsigned long long glyphSeed = (LCG_MULTIPLIER * (coloringSeed ^ i) + LCG_INCREMENT) * !!coloringSeed;
+				glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
+				return true;
+			}, m_Data->Glyphs.size()).finish(THREAD_COUNT);
+		}
+		else 
+		{
+			unsigned long long glyphSeed = coloringSeed;
+			for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs) 
+			{
+				glyphSeed *= LCG_MULTIPLIER;
+				glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
+			}
+		}
+
 		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 3, msdf_atlas::msdfGenerator>("Test", (float)emSize, m_Data, width, height);
 
 		msdfgen::destroyFont(font);
@@ -95,5 +119,14 @@ namespace Hazel
 	Font::~Font()
 	{
 		delete m_Data;
+	}
+
+	Ref<Font> Font::GetDefault()
+	{
+		static Ref<Font> defaultFont;
+		if (!defaultFont)
+			defaultFont = CreateRef<Font>("assets/fonts/opensans/OpenSans-Regular.ttf");
+
+		return defaultFont;
 	}
 }

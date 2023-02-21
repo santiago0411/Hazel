@@ -2,6 +2,7 @@
 
 #include "Hazel/Renderer/Camera.h"
 #include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Renderer/Font.h"
 #include "Hazel/Renderer/OrthographicCamera.h"
 #include "Hazel/Renderer/Texture.h"
 #include "Hazel/Renderer/SubTexture2D.h"
@@ -52,6 +53,8 @@ namespace Hazel
 		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityId = -1);
 
 		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int32_t entityId);
+
+		static void DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform, const glm::vec4& color);
 
 		static float GetLineWidth();
 		static void SetLineWidth(float width);
