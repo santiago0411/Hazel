@@ -2,6 +2,7 @@
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -221,6 +222,7 @@ namespace Hazel
 			TryListComponent<RigidBody2DComponent>("Rigidbody 2D");
 			TryListComponent<BoxCollider2DComponent>("Box Collider 2D");
 			TryListComponent<CircleCollider2DComponent>("Circle Collider 2D");
+			TryListComponent<TextComponent>("Text");
 			ImGui::EndPopup();
 		}
 
@@ -443,6 +445,14 @@ namespace Hazel
 			ImGui::DragFloat("Friction", &component.Friction, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution", &component.Restitution, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f, 0.0f);
+		});
+
+		DrawComponent<TextComponent>("Text", entity, [](TextComponent& component)
+		{
+			ImGui::InputTextMultiline("Text", &component.TextString);
+			ImGui::DragFloat("Kerning", &component.Kerning, 0.025f);
+			ImGui::DragFloat("Line Spacing", &component.LineSpacing, 0.025f);
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 		});
 	}
 

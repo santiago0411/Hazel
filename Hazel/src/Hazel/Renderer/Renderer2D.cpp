@@ -586,7 +586,7 @@ namespace Hazel
 		LoadQuadVertexData(transform, src.Color, textureCoords, textureIndex, src.TilingFactor, entityId);
 	}
 
-	void Renderer2D::DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform, const TextParams& textParams, int32_t entityId)
 	{
 		const auto& fontGeometry = font->GetMSDFData()->FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();
@@ -597,7 +597,9 @@ namespace Hazel
 		double x = 0.0;
 		double y = 0.0;
 		double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
-		double lineHeightOffset = 0.0f;
+		double lineHeightOffset = 0.0;
+
+		double spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
 
 		for (size_t i = 0; i < string.size(); i++)
 		{
@@ -609,7 +611,27 @@ namespace Hazel
 			if (character == '\n')
 			{
 				x = 0;
-				y -= fsScale * metrics.lineHeight + lineHeightOffset;
+				y -= fsScale * metrics.lineHeight + lineHeightOffset + textParams.LineSpacing;
+				continue;
+			}
+
+			if (character == ' ')
+			{
+				double advance = spaceGlyphAdvance;
+				if (i < string.size() - 1)
+				{
+					char nextCharacter = string[i + 1];
+					double nextCharAdvance;
+					fontGeometry.getAdvance(nextCharAdvance, character, nextCharacter);
+					advance = nextCharAdvance;
+				}
+				x += fsScale * advance + textParams.Kerning;
+				continue;
+			}
+
+			if (character == '\t')
+			{
+				x += 4.0 * (fsScale * spaceGlyphAdvance + textParams.Kerning);
 				continue;
 			}
 
@@ -618,9 +640,6 @@ namespace Hazel
 				glyph = fontGeometry.getGlyph('?');
 			if (!glyph)
 				return;
-
-			if (character == '\t')
-				glyph = fontGeometry.getGlyph(' ');
 
 			double al, ab, ar, at;
 			glyph->getQuadAtlasBounds(al, ab, ar, at);
@@ -645,27 +664,27 @@ namespace Hazel
 
 			// Render
 			s_Data->TextVertexBufferPtr->Position = transform * glm::vec4(quadMin, 0.0f, 1.0f);
-			s_Data->TextVertexBufferPtr->Color = color;
+			s_Data->TextVertexBufferPtr->Color = textParams.Color;
 			s_Data->TextVertexBufferPtr->TexCoord = texCoordMin;
-			s_Data->TextVertexBufferPtr->EntityId = 0; // TODO 
+			s_Data->TextVertexBufferPtr->EntityId = entityId;
 			s_Data->TextVertexBufferPtr++;
 
 			s_Data->TextVertexBufferPtr->Position = transform * glm::vec4(quadMin.x, quadMax.y, 0.0f, 1.0f);
-			s_Data->TextVertexBufferPtr->Color = color;
+			s_Data->TextVertexBufferPtr->Color = textParams.Color;
 			s_Data->TextVertexBufferPtr->TexCoord = { texCoordMin.x, texCoordMax.y };
-			s_Data->TextVertexBufferPtr->EntityId = 0; // TODO 
+			s_Data->TextVertexBufferPtr->EntityId = entityId;
 			s_Data->TextVertexBufferPtr++;
 
 			s_Data->TextVertexBufferPtr->Position = transform * glm::vec4(quadMax, 0.0f, 1.0f);
-			s_Data->TextVertexBufferPtr->Color = color;
+			s_Data->TextVertexBufferPtr->Color = textParams.Color;
 			s_Data->TextVertexBufferPtr->TexCoord = texCoordMax;
-			s_Data->TextVertexBufferPtr->EntityId = 0; // TODO 
+			s_Data->TextVertexBufferPtr->EntityId = entityId;
 			s_Data->TextVertexBufferPtr++;
 
 			s_Data->TextVertexBufferPtr->Position = transform * glm::vec4(quadMax.x, quadMin.y, 0.0f, 1.0f);
-			s_Data->TextVertexBufferPtr->Color = color;
+			s_Data->TextVertexBufferPtr->Color = textParams.Color;
 			s_Data->TextVertexBufferPtr->TexCoord = { texCoordMax.x, texCoordMin.y };
-			s_Data->TextVertexBufferPtr->EntityId = 0; // TODO 
+			s_Data->TextVertexBufferPtr->EntityId = entityId;
 			s_Data->TextVertexBufferPtr++;
 
 			s_Data->TextIndexCount += 6;
@@ -677,10 +696,14 @@ namespace Hazel
 				char nextCharacter = string[i + 1];
 				fontGeometry.getAdvance(advance, character, nextCharacter);
 
-				const float kerningOffset = 0.0f;
-				x += fsScale * advance + kerningOffset;
+				x += fsScale * advance + textParams.Kerning;
 			}
 		}
+	}
+
+	void Renderer2D::DrawString(const std::string& string, const glm::mat4& transform, const TextComponent& component, int32_t entityId)
+	{
+		DrawString(string, component.FontAsset, transform, { component.Color, component.Kerning, component.LineSpacing }, entityId);
 	}
 
 	float Renderer2D::GetLineWidth()

@@ -4,6 +4,7 @@
 
 #include "Hazel/Scene/SceneCamera.h"
 
+#include "Hazel/Renderer/Font.h"
 #include "Hazel/Renderer/Texture.h"
 
 #include <glm/glm.hpp>
@@ -162,6 +163,15 @@ namespace Hazel
 		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
 
+	struct TextComponent
+	{
+		std::string TextString;
+		Ref<Font> FontAsset = Font::GetDefault();
+		float Kerning = 0.0f;
+		float LineSpacing = 0.0f;
+		glm::vec4 Color{ 1.0f };
+	};
+
 	template<typename ... Component>
 	struct ComponentGroup{};
 	using AllComponents = ComponentGroup
@@ -174,6 +184,7 @@ namespace Hazel
 		NativeScriptComponent,
 		RigidBody2DComponent,
 		BoxCollider2DComponent,
-		CircleCollider2DComponent
+		CircleCollider2DComponent,
+		TextComponent
 	>;
 }

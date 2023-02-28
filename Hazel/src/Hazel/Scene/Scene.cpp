@@ -270,6 +270,11 @@ namespace Hazel
 				Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
 			});
 
+			m_Registry.view<TransformComponent, TextComponent>().each([](EntityId entityId, TransformComponent& tc, TextComponent& textComponent)
+			{
+				Renderer2D::DrawString(textComponent.TextString, tc.GetTransform(), textComponent, (int32_t)entityId);
+			});
+
 			Renderer2D::EndScene();
 		}
 	}
@@ -343,8 +348,7 @@ namespace Hazel
 				auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
 
 				b2PolygonShape boxShape;
-				boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y,
-					b2Vec2(bc2d.Offset.x, bc2d.Offset.y), 0.0f);
+				boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y, b2Vec2(bc2d.Offset.x, bc2d.Offset.y), 0.0f);
 
 				b2FixtureDef fixtureDef;
 				fixtureDef.shape = &boxShape;
@@ -406,54 +410,10 @@ namespace Hazel
 			Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
 		});
 
-		Renderer2D::DrawString("Santi", Font::GetDefault(), glm::mat4(1.0f), glm::vec4(1.0f));
-		Renderer2D::DrawString(
-		R"(layout(location = 0) out vec4 o_Color;
-		layout(location = 1) out int o_EntityId;
-
-		struct VertexOutput
+		m_Registry.view<TransformComponent, TextComponent>().each([](EntityId entityId, TransformComponent& tc, TextComponent& textComponent)
 		{
-			vec4 Color;
-			vec2 TexCoord;
-		};
-
-		layout(location = 0) in VertexOutput Input;
-		layout(location = 2) in flat int v_EntityId;
-
-		layout(binding = 0) uniform sampler2D u_FontAtlas;
-
-		float screenPxRange()
-		{
-			const float pxRange = 2.0;
-			vec2 unitRange = vec2(pxRange) / vec2(textureSize(u_FontAtlas, 0));
-			vec2 screenTexSize = vec2(1.0) / fwidth(Input.TexCoord);
-			return max(0.5 * dot(unitRange, screenTexSize), 1.0);
-		}
-
-		float median(float r, float g, float b)
-		{
-			return max(min(r, g), min(max(r, g), b));
-		}
-
-		void main()
-		{
-			vec3 msd = texture(u_FontAtlas, Input.TexCoord).rgb;
-			float sd = median(msd.r, msd.g, msd.b);
-			float screenPxDistance = screenPxRange() * (sd - 0.5);
-			float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
-
-			if (opacity == 0.0)
-				discard;
-
-			vec4 bgColor = vec4(0.0);
-			o_Color = mix(bgColor, Input.Color, opacity);
-
-			if (o_Color.a == 0.0)
-				discard;
-
-			o_EntityId = v_EntityId;
-		})"
-		, Font::GetDefault(), glm::mat4(1.0f), glm::vec4(1.0f));
+			Renderer2D::DrawString(textComponent.TextString, tc.GetTransform(), textComponent, (int32_t)entityId);
+		});
 
 		Renderer2D::EndScene();
 	}
