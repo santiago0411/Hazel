@@ -11,6 +11,7 @@ extern "C" {
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoMethod MonoMethod;
 	typedef struct _MonoClassField MonoClassField;
+	typedef struct _MonoString MonoString;
 }
 
 namespace Hazel
@@ -165,6 +166,8 @@ namespace Hazel
 		static ScriptFieldMap& GetScriptFieldMap(Entity entity);
 
 		static MonoObject* GetManagedInstance(UUID uuid);
+
+		static MonoString* CreateString(const char* string);
 
 	private:
 		static void InitMono();

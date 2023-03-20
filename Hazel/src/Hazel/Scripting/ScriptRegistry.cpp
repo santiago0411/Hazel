@@ -16,7 +16,18 @@
 #define HZ_ADD_INTERNAL_CALL(Name) mono_add_internal_call("Hazel.InternalCalls::" #Name, Name);
 
 namespace Hazel
-{ 
+{
+	namespace Utils
+	{
+		std::string MonoStringToString(MonoString* string)
+		{
+			char* cStr = mono_string_to_utf8(string);
+			std::string str(cStr);
+			mono_free(cStr);
+			return str;
+		}
+	}
+
 	static std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_EntityHasComponentFunctions;
 
 	static Entity GetEntity(UUID entityId)
@@ -64,11 +75,6 @@ namespace Hazel
 		GetEntity(entityId).GetComponent<TransformComponent>().Position = *position;
 	}
 
-	static bool Input_IsKeyDown(KeyCode keyCode)
-	{
-		return Input::IsKeyPressed(keyCode);
-	}
-
 	static void TransformComponent_GetRotation(uint64_t entityId, glm::vec3* outRotation)
 	{
 		*outRotation = GetEntity(entityId).GetComponent<TransformComponent>().Rotation;
@@ -114,7 +120,7 @@ namespace Hazel
 		*outLinearVelocity = glm::vec2(lv.x, lv.y);
 	}
 
-	static  RigidBody2DComponent::BodyType RigidBody2DComponent_GetType(uint64_t entityId)
+	static RigidBody2DComponent::BodyType RigidBody2DComponent_GetType(uint64_t entityId)
 	{
 		Entity entity = GetEntity(entityId);
 		const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
@@ -139,6 +145,69 @@ namespace Hazel
 	{
 		GetEntity(entityId).GetComponent<SpriteRendererComponent>().Color = *color;
 	}
+
+	static MonoString* TextComponent_GetText(uint64_t entityId)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		auto& str = entity.GetComponent<TextComponent>().TextString;
+		return ScriptEngine::CreateString(str.c_str());
+	}
+
+	static void TextComponent_SetText(uint64_t entityId, MonoString* monoString)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		entity.GetComponent<TextComponent>().TextString = Utils::MonoStringToString(monoString);
+	}
+
+	static float TextComponent_GetKerning(uint64_t entityId)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		return entity.GetComponent<TextComponent>().Kerning;
+	}
+
+	static void TextComponent_SetKerning(uint64_t entityId, float kerning)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		entity.GetComponent<TextComponent>().Kerning = kerning;
+	}
+
+	static float TextComponent_GetLineSpacing(uint64_t entityId)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		return entity.GetComponent<TextComponent>().LineSpacing;
+	}
+
+	static void TextComponent_SetLineSpacing(uint64_t entityId, float lineSpacing)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		entity.GetComponent<TextComponent>().LineSpacing = lineSpacing;
+	}
+
+	static void TextComponent_GetColor(uint64_t entityId, glm::vec4* outColor)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		*outColor = entity.GetComponent<TextComponent>().Color;
+	}
+
+	static void TextComponent_SetColor(uint64_t entityId, glm::vec4* color)
+	{
+		Entity entity = GetEntity(entityId);
+		HZ_CORE_ASSERT(entity.HasComponent<TextComponent>())
+		entity.GetComponent<TextComponent>().Color = *color;
+	}
+
+	static bool Input_IsKeyDown(KeyCode keyCode)
+	{
+		return Input::IsKeyPressed(keyCode);
+	}
+
 
 	template<typename ... Component>
 	static void RegisterComponent()
@@ -178,24 +247,33 @@ namespace Hazel
 	void ScriptRegistry::RegisterMethods()
 	{
 		HZ_ADD_INTERNAL_CALL(Entity_HasComponent)
-			HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName)
-			HZ_ADD_INTERNAL_CALL(GetScriptInstance)
+		HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName)
+		HZ_ADD_INTERNAL_CALL(GetScriptInstance)
 
-			HZ_ADD_INTERNAL_CALL(TransformComponent_GetPosition)
-			HZ_ADD_INTERNAL_CALL(TransformComponent_SetPosition)
-			HZ_ADD_INTERNAL_CALL(TransformComponent_GetRotation)
-			HZ_ADD_INTERNAL_CALL(TransformComponent_SetRotation)
-			HZ_ADD_INTERNAL_CALL(TransformComponent_GetScale)
-			HZ_ADD_INTERNAL_CALL(TransformComponent_SetScale)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetPosition)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetPosition)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetRotation)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetRotation)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_GetScale)
+		HZ_ADD_INTERNAL_CALL(TransformComponent_SetScale)
 
-			HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse)
-			HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter)
-			HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity)
-			HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetType);
-			HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_SetType);
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_GetType)
+		HZ_ADD_INTERNAL_CALL(RigidBody2DComponent_SetType)
 
 		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_GetColor)
 		HZ_ADD_INTERNAL_CALL(SpriteRendererComponent_SetColor)
+
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetText)
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetText)
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetKerning)
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetKerning)
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetLineSpacing)
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetLineSpacing)
+		HZ_ADD_INTERNAL_CALL(TextComponent_GetColor)
+		HZ_ADD_INTERNAL_CALL(TextComponent_SetColor)
 
 		HZ_ADD_INTERNAL_CALL(Input_IsKeyDown)
 	}

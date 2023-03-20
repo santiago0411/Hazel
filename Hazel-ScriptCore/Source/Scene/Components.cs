@@ -95,4 +95,43 @@ namespace Hazel
             set => InternalCalls.SpriteRendererComponent_SetColor(Entity.Id, ref value);
         }
     }
+
+    public class TextComponent : Component
+    {
+        public string Text
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => InternalCalls.TextComponent_GetText(Entity.Id);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => InternalCalls.TextComponent_SetText(Entity.Id, value);
+        }
+
+        public float Kerning
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => InternalCalls.TextComponent_GetKerning(Entity.Id);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => InternalCalls.TextComponent_SetKerning(Entity.Id, value);
+        }
+
+        public float LineSpacing
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => InternalCalls.TextComponent_GetLineSpacing(Entity.Id);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => InternalCalls.TextComponent_SetLineSpacing(Entity.Id, value);
+        }
+
+        public Color Color
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                InternalCalls.TextComponent_GetColor(Entity.Id, out var color);
+                return color;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => InternalCalls.TextComponent_SetColor(Entity.Id, ref value);
+        }
+    }
 }
