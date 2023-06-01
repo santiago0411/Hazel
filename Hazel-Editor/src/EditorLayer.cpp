@@ -399,6 +399,7 @@ namespace Hazel
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+		dispatcher.Dispatch<WindowDropEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnWindowDrop));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -510,6 +511,18 @@ namespace Hazel
 		}
 
 		return false;
+	}
+
+	bool EditorLayer::OnWindowDrop(WindowDropEvent& e)
+	{
+		// TODO if a project is dropped in, open it
+
+		for (const auto& path : e.GetPaths())
+		{
+			HZ_CORE_INFO(path);
+		}
+
+		return true;
 	}
 
 	void EditorLayer::OnOverlayRender()

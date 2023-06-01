@@ -3,6 +3,7 @@
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Asset/Asset.h"
 
 #include <entt.hpp>
 
@@ -13,7 +14,7 @@ namespace Hazel
 	class Entity;
 	using EntityId = entt::entity;
 
-	class Scene
+	class Scene : public Asset
 	{
 	public:
 		Scene();
@@ -54,6 +55,10 @@ namespace Hazel
 		{
 			return m_Registry.view<Components...>();
 		}
+
+		static AssetType GetStaticType() { return AssetType::Scene; }
+		AssetType GetType() const override { return GetStaticType(); }
+
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

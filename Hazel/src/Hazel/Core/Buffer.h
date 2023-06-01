@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+#include <memory.h>
 
 namespace Hazel
 {
@@ -12,6 +12,9 @@ namespace Hazel
 
 		Buffer() = default;
 		Buffer(const Buffer&) = default;
+
+		Buffer(const void* data, const uint64_t size)
+			: Data((uint8_t*)data), Size(size) {}
 
 		Buffer(const uint64_t size)
 		{
@@ -29,13 +32,13 @@ namespace Hazel
 		{
 			Release();
 
-			Data = new uint8_t[size];
+			Data = (uint8_t*)malloc(size);
 			Size = size;
 		}
 
 		void Release()
 		{
-			delete[] Data;
+			free(Data);
 			Data = nullptr;
 			Size = 0;
 		}

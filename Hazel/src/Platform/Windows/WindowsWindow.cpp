@@ -156,6 +156,18 @@ namespace Hazel
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);
 		});
+
+		glfwSetDropCallback(m_Window, [](GLFWwindow* window, int pathCount, const char* paths[])
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			std::vector<FilePath> filepaths(pathCount);
+			for (int i = 0; i < pathCount; i++)
+				filepaths[i] = paths[i];
+
+			WindowDropEvent event(std::move(filepaths));
+			data.EventCallback(event);
+		});
 	}
 
 	void WindowsWindow::CreateGlfwWindow()

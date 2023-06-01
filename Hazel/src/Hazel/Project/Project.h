@@ -3,6 +3,9 @@
 #include "Hazel/Core/Base.h"
 #include "Hazel/Core/FileSystem.h"
 
+#include "Hazel/Asset/RuntimeAssetManager.h"
+#include "Hazel/Asset/EditorAssetManager.h"
+
 #include <string>
 #include <filesystem>
 
@@ -43,6 +46,9 @@ namespace Hazel
 		ProjectConfig& GetConfig() { return m_Config; }
 
 		static Ref<Project> GetActive() { return s_ActiveProject; }
+		Ref<AssetManagerBase> GetAssetManager() { return m_AssetManager; }
+		Ref<RuntimeAssetManager> GetRuntimeAssetManager() const { return std::static_pointer_cast<RuntimeAssetManager>(m_AssetManager); }
+		Ref<EditorAssetManager> GetEditorAssetManager() const { return std::static_pointer_cast<EditorAssetManager>(m_AssetManager); }
 
 		static Ref<Project> New();
 		static Ref<Project> Load(const FilePath& path);
@@ -51,6 +57,7 @@ namespace Hazel
 	private:
 		ProjectConfig m_Config;
 		FilePath m_ProjectDirectory;
+		Ref<AssetManagerBase> m_AssetManager;
 
 		inline static Ref<Project> s_ActiveProject;
 	};
