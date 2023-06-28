@@ -1,0 +1,7 @@
+AssetRegistry:
+  - Handle: 10935306056459460975
+    FilePath: Textures/Fountain.png
+    Type: Texture2D
+  - Handle: 11254071069867866622
+    FilePath: Textures/Checkerboard.png
+    Type: Texture2D

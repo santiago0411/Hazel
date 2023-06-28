@@ -15,8 +15,14 @@ namespace Hazel
 		bool IsAssetHandleValid(AssetHandle handle) const override;
 		bool IsAssetLoaded(AssetHandle handle) const override;
 
+		void ImportAsset(const FilePath& path);
+
 		const AssetMetadata& GetMetadata(AssetHandle handle) const;
 
+		const AssetRegistry& GetAssetRegistry() const { return m_AssetRegistry; }
+
+		void SerializeAssetRegistry();
+		bool DeserializeAssetRegistry();
 	private:
 		AssetRegistry m_AssetRegistry;
 		AssetMap m_LoadedAssets;

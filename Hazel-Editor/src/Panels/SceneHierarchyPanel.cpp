@@ -377,6 +377,7 @@ namespace Hazel
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
 			ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+#if 0
 			if (ImGui::BeginDragDropTarget())
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -390,7 +391,7 @@ namespace Hazel
 				}
 				ImGui::EndDragDropTarget();
 			}
-
+#endif
 			ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
 		});
 

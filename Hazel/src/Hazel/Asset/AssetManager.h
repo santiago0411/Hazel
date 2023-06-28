@@ -10,7 +10,7 @@ namespace Hazel
 	{
 	public:
 		template<typename T>
-		static Ref<Asset> GetAsset(AssetHandle handle)
+		static Ref<T> GetAsset(AssetHandle handle)
 		{
 			Ref<Asset> asset = Project::GetActive()->GetAssetManager()->GetAsset(handle);
 			return std::static_pointer_cast<T>(asset);

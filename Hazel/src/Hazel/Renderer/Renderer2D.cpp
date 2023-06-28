@@ -7,6 +7,8 @@
 #include "Hazel/Renderer/UniformBuffer.h"
 #include "Hazel/Renderer/VertexArray.h"
 
+#include "Hazel/Asset/AssetManager.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -580,8 +582,16 @@ namespace Hazel
 		if (s_Data->QuadIndexCount >= Renderer2DData::MAX_INDICES)
 			NextBatch();
 
+		if (!src.Texture)
+		{
+			static glm::vec2 emptyCoords[]{ glm::vec2(0), glm::vec2(0), glm::vec2(0), glm::vec2(0) };
+			LoadQuadVertexData(transform, src.Color, emptyCoords, 0, 0, entityId);
+			return;
+		}
+
+		Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(src.Texture);
 		constexpr glm::vec2 textureCoords[]{ { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const uint32_t textureIndex = src.Texture ? FindTextureIndex(src.Texture) : 0;
+		const uint32_t textureIndex = src.Texture ? FindTextureIndex(texture) : 0;
 
 		LoadQuadVertexData(transform, src.Color, textureCoords, textureIndex, src.TilingFactor, entityId);
 	}
@@ -718,6 +728,8 @@ namespace Hazel
 
 	uint32_t Renderer2D::FindTextureIndex(const Ref<Texture2D>& texture)
 	{
+		HZ_CORE_VERIFY(texture)
+
 		uint32_t textureIndex = 0;
 
 		for (uint32_t i = 1; i < s_Data->TextureSlotIndex; i++)

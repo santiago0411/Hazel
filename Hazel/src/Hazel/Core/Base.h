@@ -4,22 +4,25 @@
 
 #include "PlatformDetection.h"
 
-#ifdef HZ_DEBUG
-	#if defined(HZ_PLATFORM_WINDOWS)
-		#define HZ_DEBUGBREAK() __debugbreak()
-	#elif defined(HZ_PLATFORM_LINUX)
-		#include <signal.h>
-		#define HZ_DEBUGBREAK() raise(SIGTRAP)
-	#else
-		#error "Platform doesn't support debugbreak!'"
-	#endif
-	#define HZ_ENABLE_ASSERTS
+#if defined(HZ_PLATFORM_WINDOWS)
+	#define HZ_DEBUGBREAK() __debugbreak()
+#elif defined(HZ_PLATFORM_LINUX)
+	#include <signal.h>
+	#define HZ_DEBUGBREAK() raise(SIGTRAP)
 #else
-	#define HZ_DEBUGBREAK()
+	#error "Platform doesn't support debugbreak!'"
+#endif
+
+#if defined(HZ_DEBUG)
+	#define HZ_ENABLE_ASSERTS
+#endif
+
+#ifndef HZ_DIST
+	#define HZ_ENABLE_VERIFY
 #endif
 
 // DLL support
-#ifdef HZ_PLATFORM_WINDOWS
+#if defined(HZ_PLATFORM_WINDOWS)
 	#if HZ_DYNAMIC_LINK
 		#ifdef HZ_BUILD_DLL
 			#define HAZEL_API __declspec(dllexport)

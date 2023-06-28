@@ -18,6 +18,7 @@ namespace Hazel
 		FilePath StartScene;
 
 		FilePath AssetDirectory;
+		FilePath AssetRegistryPath;
 		FilePath ScriptModulePath;
 	};
 
@@ -26,7 +27,7 @@ namespace Hazel
 	public:
 		static const FilePath& GetProjectDirectory()
 		{
-			HZ_CORE_ASSERT(s_ActiveProject);
+			HZ_CORE_ASSERT(s_ActiveProject)
 			return s_ActiveProject->m_ProjectDirectory;
 		}
 
@@ -34,6 +35,12 @@ namespace Hazel
 		{
 			HZ_CORE_ASSERT(s_ActiveProject);
 			return GetProjectDirectory() / s_ActiveProject->m_Config.AssetDirectory;
+		}
+
+		static FilePath GetAssetRegistryPath()
+		{
+			HZ_CORE_ASSERT(s_ActiveProject)
+			return GetAssetDirectory() / s_ActiveProject->m_Config.AssetRegistryPath;
 		}
 
 		// TODO move to asset manager

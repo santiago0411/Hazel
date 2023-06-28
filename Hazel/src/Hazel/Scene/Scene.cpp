@@ -73,7 +73,7 @@ namespace Hazel
 	Scene::~Scene()
 	{
 		m_Registry.on_construct<CameraComponent>().disconnect<&Scene::OnCameraComponentAdded>(this);
-		m_Registry.on_construct<NativeScriptComponent>().disconnect<&Scene::OnNativeScriptComponentAdded(this);
+		m_Registry.on_construct<NativeScriptComponent>().disconnect<&Scene::OnNativeScriptComponentAdded>(this);
 		delete m_PhysicsWorld;
 	}
 
@@ -407,7 +407,7 @@ namespace Hazel
 
 		m_Registry.view<TransformComponent, CircleRendererComponent>().each([](EntityId entityId, TransformComponent& tc, CircleRendererComponent& crc)
 		{
-				Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
+			Renderer2D::DrawCircle(tc.GetTransform(), crc.Color, crc.Thickness, crc.Fade, (int32_t)entityId);
 		});
 
 		m_Registry.view<TransformComponent, TextComponent>().each([](EntityId entityId, TransformComponent& tc, TextComponent& textComponent)

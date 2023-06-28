@@ -19,12 +19,20 @@ namespace Hazel
 		{
 			switch (type)
 			{
-				case AssetType::None: return "None";
-				case AssetType::Scene: return "Scene";
-				case AssetType::Texture2D: return "Texture2D";
+				case AssetType::None:		return "None";
+				case AssetType::Scene:		return "Scene";
+				case AssetType::Texture2D:	return "Texture2D";
 			}
 
-			return "Unknown asset type";
+			return "Unknown AssetType";
+		}
+
+		static AssetType AssetTypeFromString(std::string_view type)
+		{
+			if (type == "Scene")		return AssetType::Scene;
+			if (type == "Texture2D")	return AssetType::Texture2D;
+
+			return AssetType::None;
 		}
 	}
 
@@ -34,7 +42,5 @@ namespace Hazel
 		AssetHandle Handle;
 
 		virtual AssetType GetType() const = 0;
-
-
 	};
 }
