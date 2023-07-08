@@ -2,6 +2,7 @@
 #include "Hazel/Asset/AssetImporter.h"
 
 #include "TextureImporter.h"
+#include "SceneImporter.h"
 
 #include <map>
 
@@ -9,7 +10,7 @@ namespace Hazel
 {
 	using AssetImportFunction = std::function<Ref<Asset>(AssetHandle, const AssetMetadata&)>;
 	static std::map<AssetType, AssetImportFunction> s_AssetImportFunctions = {
-		// { AssetType::Scene, nullptr },
+		{ AssetType::Scene, SceneImporter::ImportScene },
 		{ AssetType::Texture2D, TextureImporter::ImportTexture2D }
 	};
 

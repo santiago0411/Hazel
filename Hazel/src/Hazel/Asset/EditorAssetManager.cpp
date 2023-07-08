@@ -12,6 +12,22 @@
 
 namespace Hazel
 {
+	static std::map<FilePath, AssetType> s_AssetExtensionMap = {
+		{ ".hazel", AssetType::Scene },
+		{ ".png", AssetType::Texture2D },
+		{ ".jpg", AssetType::Texture2D },
+		{ ".", AssetType::Texture2D },
+	};
+
+	static AssetType GetTypeFromExtension(const FilePath& extension)
+	{
+		const auto it = s_AssetExtensionMap.find(extension);
+		if (it == s_AssetExtensionMap.end())
+			return AssetType::None;
+
+		return it->second;
+	}
+
 	bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
 	{
 		return handle != 0 && m_AssetRegistry.find(handle) != m_AssetRegistry.end();
@@ -22,16 +38,30 @@ namespace Hazel
 		return m_LoadedAssets.find(handle) != m_LoadedAssets.end();
 	}
 
+	AssetType EditorAssetManager::GetAssetType(AssetHandle handle) const
+	{
+		if (!IsAssetHandleValid(handle))
+			return AssetType::None;
+
+		return m_AssetRegistry.at(handle).Type;
+	}
+
 	void EditorAssetManager::ImportAsset(const FilePath& path)
 	{
 		AssetHandle handle;
 		AssetMetadata metadata;
-		metadata.Type = AssetType::Texture2D; // TODO grab this from extension
+		metadata.Type = GetTypeFromExtension(path.extension());
+		if (metadata.Type == AssetType::None)
+		{
+			HZ_CORE_WARN("Unknown AssetType extension {}", path.extension());
+			return;
+		}
+
 		metadata.FilePath = path;
 		Ref<Asset> asset = AssetImporter::ImportAsset(handle, metadata);
-		asset->Handle = handle;
 		if (asset)
 		{
+			asset->Handle = handle;
 			m_LoadedAssets[handle] = asset;
 			m_AssetRegistry[handle] = metadata;
 			SerializeAssetRegistry();
@@ -48,7 +78,12 @@ namespace Hazel
 		return it->second;
 	}
 
-	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle) const
+	const FilePath& EditorAssetManager::GetFilePath(AssetHandle handle) const
+	{
+		return GetMetadata(handle).FilePath;
+	}
+
+	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle)
 	{
 		if (!IsAssetHandleValid(handle))
 			return nullptr;
@@ -65,6 +100,8 @@ namespace Hazel
 			asset = AssetImporter::ImportAsset(handle, metadata);
 			if (!asset)
 				HZ_CORE_ERROR("EditorAssetManager::GetMetadata - asset import failed!");
+			else
+				m_LoadedAssets[handle] = asset;
 		}
 
 		return asset;

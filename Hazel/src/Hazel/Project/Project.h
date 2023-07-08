@@ -15,7 +15,7 @@ namespace Hazel
 	{
 		std::string Name = "Untitled";
 
-		FilePath StartScene;
+		AssetHandle StartScene;
 
 		FilePath AssetDirectory;
 		FilePath AssetRegistryPath;

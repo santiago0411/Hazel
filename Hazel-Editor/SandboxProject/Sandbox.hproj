@@ -1,6 +1,6 @@
 Project:
   Name: Sandbox
-  StartScene: "Scenes/Physics2D.hazel"
+  StartScene: 1670304477438325680
   AssetDirectory: "Assets"
   AssetRegistryPath: "AssetRegistry.hzr"
   ScriptModulePath: "Scripts/Binaries/Sandbox.dll"

@@ -5,6 +5,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Hazel/Asset/AssetManager.h"
+#include "Hazel/Asset/SceneImporter.h"
 #include "Hazel/Asset/TextureImporter.h"
 
 #include "Hazel/Scene/SceneSerializer.h"
@@ -256,8 +258,8 @@ namespace Hazel
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
-				const auto path = (const wchar_t*)payload->Data;
- 				OpenScene(path);
+				const auto handle = *(AssetHandle*)payload->Data;
+ 				OpenScene(handle);
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -606,8 +608,9 @@ namespace Hazel
 			else
 				HZ_WARN("Current project does not have a C# assembly or it was not found.");
 
-			const auto startScenePath = Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene);
-			OpenScene(startScenePath);
+			AssetHandle startScene = Project::GetActive()->GetConfig().StartScene;
+			if (startScene)
+				OpenScene(startScene);
 			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
 		}
 	}
@@ -616,7 +619,6 @@ namespace Hazel
 	{
 		// Project::SaveActive();
 	}
-
 
 	void EditorLayer::NewScene()
 	{
@@ -627,33 +629,20 @@ namespace Hazel
 		m_ActiveScenePath = FilePath();
 	}
 
-	void EditorLayer::OpenScene()
+	void EditorLayer::OpenScene(AssetHandle handle)
 	{
-		const std::optional<std::string> filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
-		if (filepath)
-			OpenScene(*filepath);
-	}
+		HZ_CORE_ASSERT(handle)
 
-	void EditorLayer::OpenScene(const FilePath& path)
-	{
 		if (m_SceneState != SceneState::Edit)
 			OnSceneStop();
 
-		if (path.extension().string() != ".hazel")
-		{
-			HZ_WARN("Could not load {0} - not a scene file", path);
-			return;
-		} 
+		const Ref<Scene> readOnlyScene = AssetManager::GetAsset<Scene>(handle);
+		Ref<Scene> newScene = Scene::Copy(readOnlyScene);
 
-		auto newScene = CreateRef<Scene>();
-		SceneSerializer serializer(newScene);
-		if (serializer.Deserialize(path))
-		{
-			m_EditorScene = newScene;
-			m_ActiveScene = m_EditorScene;
-			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-			m_ActiveScenePath = path;
-		}
+		m_EditorScene = newScene;
+		m_ActiveScene = m_EditorScene;
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_ActiveScenePath = Project::GetActive()->GetEditorAssetManager()->GetFilePath(handle);
 	}
 
 	void EditorLayer::SaveScene()
@@ -676,10 +665,7 @@ namespace Hazel
 
 	void EditorLayer::SerializeScene(const FilePath& path) const
 	{
-		HZ_CORE_ASSERT(!path.empty());
-
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Serialize(path);
+		SceneImporter::SaveScene(m_ActiveScene, path);
 	}
 
 	int32_t EditorLayer::GetMouseOverPixelData() const

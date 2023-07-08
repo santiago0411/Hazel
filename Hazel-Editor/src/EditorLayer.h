@@ -31,8 +31,7 @@ namespace Hazel
 		void SaveProject();
 
 		void NewScene();
-		void OpenScene();
-		void OpenScene(const FilePath& path);
+		void OpenScene(AssetHandle handle);
 		void SaveScene();
 		void SaveSceneAs();
 		void SerializeScene(const FilePath& path) const;

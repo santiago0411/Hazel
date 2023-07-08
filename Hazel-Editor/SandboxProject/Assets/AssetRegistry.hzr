@@ -1,7 +1,22 @@
 AssetRegistry:
-  - Handle: 10935306056459460975
+  - Handle: 1670304477438325680
+    FilePath: Scenes/Physics2D.hazel
+    Type: Scene
+  - Handle: 5057317130692932972
+    FilePath: Scenes/Example.hazel
+    Type: Scene
+  - Handle: 8761706486989113633
     FilePath: Textures/Fountain.png
     Type: Texture2D
-  - Handle: 11254071069867866622
+  - Handle: 8818826209917808077
+    FilePath: Scenes/Physics2D.hazel
+    Type: Scene
+  - Handle: 10360054786698319153
+    FilePath: Scenes/PinkCube.hazel
+    Type: Scene
+  - Handle: 12223738903033340248
+    FilePath: Scenes/OtherScene.hazel
+    Type: Scene
+  - Handle: 15853361958805398252
     FilePath: Textures/Checkerboard.png
     Type: Texture2D

@@ -13,7 +13,7 @@ namespace Hazel
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
-		m_TreeNodes.emplace_back(".");
+		m_TreeNodes.emplace_back(".", 0);
 
 		m_DirectoryIcon = TextureImporter::LoadTexture2D("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon = TextureImporter::LoadTexture2D("Resources/Icons/ContentBrowser/FileIcon.png");
@@ -80,6 +80,13 @@ namespace Hazel
 				ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
 				ImGui::ImageButton((ImTextureID)icon->GetRendererId(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
+				if (ImGui::BeginDragDropSource())
+				{
+					AssetHandle handle = m_TreeNodes[treeNodeIndex].Handle; 
+					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", &handle, sizeof(AssetHandle), ImGuiCond_Once);
+					ImGui::EndDragDropSource();
+				}
+
 				ImGui::PopStyleColor();
 				if (ImGui::IsItemHovered() 
 					&& ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)
@@ -111,16 +118,9 @@ namespace Hazel
 					{
 						auto relativePath = Fs::relative(path, Project::GetAssetDirectory());
 						Project::GetActive()->GetEditorAssetManager()->ImportAsset(relativePath);
+						RefreshAssetTree();
 					}
 					ImGui::EndPopup();
-				}
-
-				if (ImGui::BeginDragDropSource())
-				{
-					std::filesystem::path relativePath(path);
-					const wchar_t* itemPath = relativePath.c_str();
-					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
-					ImGui::EndDragDropSource();
 				}
 
 				ImGui::PopStyleColor();
@@ -162,7 +162,7 @@ namespace Hazel
 				}
 				else
 				{
-					TreeNode newNode(p);
+					TreeNode newNode(p, handle);
 					newNode.Parent = currentNodeIndex;
 					m_TreeNodes.push_back(newNode);
 

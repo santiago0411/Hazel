@@ -10,14 +10,16 @@ namespace Hazel
 	class EditorAssetManager : public AssetManagerBase
 	{
 	public:
-		Ref<Asset> GetAsset(AssetHandle handle) const override;
+		Ref<Asset> GetAsset(AssetHandle handle) override;
 
 		bool IsAssetHandleValid(AssetHandle handle) const override;
 		bool IsAssetLoaded(AssetHandle handle) const override;
+		AssetType GetAssetType(AssetHandle handle) const override;
 
 		void ImportAsset(const FilePath& path);
 
 		const AssetMetadata& GetMetadata(AssetHandle handle) const;
+		const FilePath& GetFilePath(AssetHandle handle) const;
 
 		const AssetRegistry& GetAssetRegistry() const { return m_AssetRegistry; }
 

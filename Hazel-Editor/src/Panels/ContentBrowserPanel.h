@@ -26,12 +26,13 @@ namespace Hazel
 		struct TreeNode
 		{
 			FilePath Path;
+			AssetHandle Handle = 0;
 
 			uint32_t Parent = -1;
 			std::map<FilePath, uint32_t> Children;
 
-			TreeNode(const FilePath& path)
-				: Path(path) {}
+			TreeNode(const FilePath& path, AssetHandle handle)
+				: Path(path), Handle(handle) {}
 		};
 
 		std::vector<TreeNode> m_TreeNodes;
