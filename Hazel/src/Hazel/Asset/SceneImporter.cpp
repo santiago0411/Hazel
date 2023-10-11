@@ -9,7 +9,7 @@ namespace Hazel
 	Ref<Scene> SceneImporter::ImportScene(AssetHandle handle, const AssetMetadata& metadata)
 	{
 		HZ_PROFILE_FUNCTION();
-		return LoadScene(Project::GetAssetDirectory() / metadata.FilePath);
+		return LoadScene(Project::GetActiveAssetDirectory() / metadata.FilePath);
 	}
 
 	Ref<Scene> SceneImporter::LoadScene(const FilePath& path)
@@ -25,6 +25,6 @@ namespace Hazel
 	void SceneImporter::SaveScene(Ref<Scene> scene, const FilePath& path)
 	{
 		SceneSerializer serializer(scene);
-		serializer.Serialize(Project::GetAssetDirectory() / path);
+		serializer.Serialize(Project::GetActiveAssetDirectory() / path);
 	}
 }

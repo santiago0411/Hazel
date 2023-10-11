@@ -1,17 +1,19 @@
 #pragma once
 
 #include "Hazel/Core/FileSystem.h"
-
 #include "Hazel/Renderer/Texture.h"
+#include "Hazel/Project/Project.h"
+#include "ThumbnailCache.h"
 
 #include <map>
+
 
 namespace Hazel
 {
 	class ContentBrowserPanel
 	{
 	public:
-		ContentBrowserPanel();
+		ContentBrowserPanel(Ref<Project> project);
 		~ContentBrowserPanel() = default;
 
 		void OnImGuiRender();
@@ -20,6 +22,9 @@ namespace Hazel
 		void RefreshAssetTree();
 
 	private:
+		Ref<Project> m_Project;
+		Ref<ThumbnailCache> m_ThumbnailCache;
+
 		FilePath m_BaseDirectory, m_CurrentDirectory;
 		Ref<Texture2D> m_DirectoryIcon, m_FileIcon;
 

@@ -10,7 +10,7 @@ namespace Hazel
 	Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata)
 	{
 		HZ_PROFILE_FUNCTION();
-		return LoadTexture2D(Project::GetAssetDirectory() / metadata.FilePath);
+		return LoadTexture2D(Project::GetActiveAssetDirectory() / metadata.FilePath);
 	}
 
 	Ref<Texture2D> TextureImporter::LoadTexture2D(const FilePath& path)

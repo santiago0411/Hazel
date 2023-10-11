@@ -109,7 +109,7 @@ namespace Hazel
 
 	void EditorAssetManager::SerializeAssetRegistry()
 	{
-		FilePath path = Project::GetAssetRegistryPath();
+		FilePath path = Project::GetActiveAssetRegistryPath();
 
 		YAML::Emitter out;
 		out << YAML::BeginMap; // Root
@@ -133,7 +133,7 @@ namespace Hazel
 
 	bool EditorAssetManager::DeserializeAssetRegistry()
 	{
-		FilePath path = Project::GetAssetRegistryPath();
+		FilePath path = Project::GetActiveAssetRegistryPath();
 
 		YAML::Node data;
 		try

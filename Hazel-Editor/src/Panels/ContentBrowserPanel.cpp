@@ -10,8 +10,9 @@ namespace Hazel
 {
 	namespace Fs = std::filesystem;
 
-	ContentBrowserPanel::ContentBrowserPanel()
-		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
+	ContentBrowserPanel::ContentBrowserPanel(Ref<Project> project)
+		: m_Project(project), m_ThumbnailCache(CreateRef<ThumbnailCache>(project)),
+			m_BaseDirectory(m_Project->GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_TreeNodes.emplace_back(".", 0);
 
@@ -53,7 +54,7 @@ namespace Hazel
 		{
 			TreeNode* node = &m_TreeNodes[0];
 
-			FilePath currentDir = Fs::relative(m_CurrentDirectory, Project::GetAssetDirectory());
+			FilePath currentDir = Fs::relative(m_CurrentDirectory, Project::GetActiveAssetDirectory());
 			for (const auto& p : currentDir)
 			{
 				// If only one level
@@ -72,11 +73,13 @@ namespace Hazel
 
 			for (const auto& [item, treeNodeIndex] : node->Children)
 			{
-				bool isDirectory = Fs::is_directory(Project::GetAssetDirectory() / item);
+				bool isDirectory = Fs::is_directory(Project::GetActiveAssetDirectory() / item);
 				std::string itemStr = item.generic_string();
 
 				ImGui::PushID(itemStr.c_str());
+
 				Ref<Texture2D> icon = isDirectory ? m_DirectoryIcon : m_FileIcon;
+
 				ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
 				ImGui::ImageButton((ImTextureID)icon->GetRendererId(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
@@ -108,15 +111,23 @@ namespace Hazel
 				std::string filenameString = path.filename().string();
 
 				ImGui::PushID(filenameString.c_str());
-				Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+
+				auto relativePath = Fs::relative(path, Project::GetActiveAssetDirectory());
+				Ref<Texture2D> thumbnail = m_DirectoryIcon;
+				if (!directoryEntry.is_directory())
+				{
+					thumbnail = m_ThumbnailCache->GetOrCreateThumbnail(relativePath);
+					if (!thumbnail)
+						thumbnail = m_FileIcon;
+				}
+
 				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-				ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererId(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
+				ImGui::ImageButton((ImTextureID)(uint64_t)thumbnail->GetRendererId(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
 				if (ImGui::BeginPopupContextItem())
 				{
 					if (ImGui::MenuItem("Import"))
 					{
-						auto relativePath = Fs::relative(path, Project::GetAssetDirectory());
 						Project::GetActive()->GetEditorAssetManager()->ImportAsset(relativePath);
 						RefreshAssetTree();
 					}

@@ -25,29 +25,55 @@ namespace Hazel
 	class Project
 	{
 	public:
-		static const FilePath& GetProjectDirectory()
+		const FilePath& GetProjectDirectory()
 		{
-			HZ_CORE_ASSERT(s_ActiveProject)
-			return s_ActiveProject->m_ProjectDirectory;
+			return m_ProjectDirectory;
 		}
 
-		static FilePath GetAssetDirectory()
+		FilePath GetAssetDirectory()
 		{
-			HZ_CORE_ASSERT(s_ActiveProject);
-			return GetProjectDirectory() / s_ActiveProject->m_Config.AssetDirectory;
+			return GetProjectDirectory() / m_Config.AssetDirectory;
 		}
 
-		static FilePath GetAssetRegistryPath()
+		FilePath GetAssetRegistryPath()
 		{
-			HZ_CORE_ASSERT(s_ActiveProject)
-			return GetAssetDirectory() / s_ActiveProject->m_Config.AssetRegistryPath;
+			return GetAssetDirectory() / m_Config.AssetRegistryPath;
 		}
 
 		// TODO move to asset manager
-		static FilePath GetAssetFileSystemPath(const FilePath& path)
+		FilePath GetAssetFileSystemPath(const FilePath& path)
+		{
+			return GetAssetDirectory() / path;
+		}
+
+		FilePath GetAssetAbsolutePath(const FilePath& path)
+		{
+			return GetAssetDirectory() / path;
+		}
+
+		static const FilePath& GetActiveProjectDirectory()
+		{
+			HZ_CORE_ASSERT(s_ActiveProject)
+			return s_ActiveProject->GetProjectDirectory();
+		}
+
+		static FilePath GetActiveAssetDirectory()
 		{
 			HZ_CORE_ASSERT(s_ActiveProject);
-			return GetAssetDirectory() / path;
+			return s_ActiveProject->GetAssetDirectory();
+		}
+
+		static FilePath GetActiveAssetRegistryPath()
+		{
+			HZ_CORE_ASSERT(s_ActiveProject)
+			return s_ActiveProject->GetAssetRegistryPath();
+		}
+
+		// TODO move to asset manager
+		static FilePath GetActiveAssetFileSystemPath(const FilePath& path)
+		{
+			HZ_CORE_ASSERT(s_ActiveProject);
+			return s_ActiveProject->GetActiveAssetFileSystemPath(path);
 		}
 
 		ProjectConfig& GetConfig() { return m_Config; }

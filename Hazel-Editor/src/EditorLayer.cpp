@@ -602,7 +602,7 @@ namespace Hazel
 	{
 		if (Project::Load(path))
 		{
-			auto appAssemblyPath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+			auto appAssemblyPath = Project::GetActiveAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
 			if (!appAssemblyPath.empty() && std::filesystem::exists(appAssemblyPath))
 				ScriptEngine::LoadAppAssembly();
 			else
@@ -611,7 +611,7 @@ namespace Hazel
 			AssetHandle startScene = Project::GetActive()->GetConfig().StartScene;
 			if (startScene)
 				OpenScene(startScene);
-			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>(Project::GetActive());
 		}
 	}
 

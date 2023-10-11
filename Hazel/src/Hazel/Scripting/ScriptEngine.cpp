@@ -243,7 +243,7 @@ namespace Hazel
 
 	bool ScriptEngine::LoadAppAssembly()
 	{
-		const FilePath assemblyPath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+		const FilePath assemblyPath = Project::GetActiveAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(assemblyPath, s_Data->EnableDebugging);
 		if (!s_Data->AppAssembly)
 		{
