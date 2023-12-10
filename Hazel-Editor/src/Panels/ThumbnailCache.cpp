@@ -30,14 +30,40 @@ namespace Hazel
 		if (assetPath.extension() != ".png")
 			return nullptr;
 
-		Ref<Texture2D> thumbnail = TextureImporter::LoadTexture2D(absolutePath);
-		if (!thumbnail)
-			return nullptr;
+		m_Queue.push({ absolutePath, assetPath, timestamp });
+		return nullptr;
+	}
 
-		ThumbnailImage& cachedImage = m_CachedImages[assetPath];
-		cachedImage.Timestamp = timestamp;
-		cachedImage.Image = thumbnail;
+	void ThumbnailCache::OnUpdate()
+	{
+		while (!m_Queue.empty())
+		{
+			const auto& [absolutePath, assetPath, timestamp] = m_Queue.front();
 
-		return thumbnail;
+			auto it = m_CachedImages.find(assetPath);
+			if (it != m_CachedImages.end())
+			{
+				ThumbnailImage& cachedImage = it->second;
+				if (cachedImage.Timestamp == timestamp)
+				{
+					m_Queue.pop();
+					continue;
+				}
+			}
+
+			Ref<Texture2D> thumbnail = TextureImporter::LoadTexture2D(absolutePath);
+			if (!thumbnail)
+			{
+				m_Queue.pop();
+				continue;
+			}
+
+			ThumbnailImage& cachedImage = m_CachedImages[assetPath];
+			cachedImage.Timestamp = timestamp;
+			cachedImage.Image = thumbnail;
+
+			m_Queue.pop();
+			break;
+		}
 	}
 }
