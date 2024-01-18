@@ -52,6 +52,8 @@ namespace Hazel
 			}
 
 			Ref<Texture2D> thumbnail = TextureImporter::LoadTexture2D(absolutePath);
+			float thumbnailHeight = m_ThumbnailSize * ((float)thumbnail->GetHeight() / (float)thumbnail->GetWidth());
+			thumbnail->ChangeSize(m_ThumbnailSize, thumbnailHeight);
 			if (!thumbnail)
 			{
 				m_Queue.pop();

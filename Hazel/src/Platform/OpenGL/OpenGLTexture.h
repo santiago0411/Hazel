@@ -18,6 +18,10 @@ namespace Hazel
 		uint32_t GetHeight() const override { return m_Height; }
 		uint32_t GetRendererId() const override { return m_RendererId; }
 
+		uint64_t GetEstimatedSize() const override { return m_Width * m_Height * 4; }
+
+		void ChangeSize(uint32_t newWidth, uint32_t newHeight) override;
+
 		void SetData(Buffer buffer) override;
 		
 		void Bind(uint32_t slot = 0) const override;

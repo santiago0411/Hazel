@@ -36,6 +36,8 @@ namespace Hazel
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetRendererId() const = 0;
 
+		virtual uint64_t GetEstimatedSize() const = 0;
+
 		virtual void SetData(Buffer data) = 0;
 		
 		virtual void Bind(uint32_t slot = 0) const = 0;
@@ -49,6 +51,8 @@ namespace Hazel
 	{
 	public:
 		static Ref<Texture2D> Create(const TextureSpecification& specification, Buffer data = Buffer());
+
+		virtual void ChangeSize(uint32_t newWidth, uint32_t newHeight) = 0;
 
 		static AssetType GetStaticType() { return AssetType::Texture2D; }
 		AssetType GetType() const override { return GetStaticType(); }

@@ -26,6 +26,8 @@ namespace Hazel
 	private:
 		Ref<Project> m_Project;
 
+		uint32_t m_ThumbnailSize = 128;
+
 		std::map<FilePath, ThumbnailImage> m_CachedImages;
 
 		struct ThumbnailInfo
